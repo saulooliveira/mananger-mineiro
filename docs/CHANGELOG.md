@@ -123,3 +123,10 @@
 - compilou: N/A
 - testado: sim
 - observação: Ajustado ignore para dependências, builds, bin/obj e bancos locais; removidos artefatos gerados do índice com git rm --cached.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/main.js, app/frontend/package.json
+- ação: correção
+- compilou: sim
+- testado: sim
+- observação: Fixed Electron module loading. Replace electron-is-dev with process.env.NODE_ENV check (CommonJS compatible). Update preload path for packaged builds using process.resourcesPath.
