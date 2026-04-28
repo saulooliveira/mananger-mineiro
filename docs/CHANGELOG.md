@@ -82,6 +82,13 @@
 - testado: não
 - observação: Task 09. Seed de 1000 produtos gerados aleatoriamente em DEBUG.
 
+- autor: GitHub Copilot
+- arquivo: app/frontend/package.json, app/frontend/package-lock.json, app/frontend/public/electron.js
+- ação: alteração
+- compilou: N/A
+- testado: não
+- observação: Fix Electron packaging by adding public/electron.js and updating frontend build metadata for react-cra electron-builder.
+
 - autor: Claude Code
 - arquivo: app/backend/Controllers/PrintController.cs, app/backend/Services/PrintService.cs, app/backend/Services/ProdutoService.cs, app/backend/backend.csproj, app/backend/Program.cs
 - ação: alteração

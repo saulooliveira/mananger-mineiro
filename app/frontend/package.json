@@ -2,11 +2,29 @@
   "name": "gerador-ofertas-frontend",
   "version": "0.1.0",
   "private": true,
-  "main": "build/electron.js",
+  "description": "Electron frontend for Gerador de Ofertas",
+  "author": "GitHub Copilot",
+  "main": "src/main.js",
   "homepage": "./",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "concurrently": "^9.2.1",
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.0",
+    "react-scripts": "^5.0.1",
+    "typescript": "^4.9.5",
+    "wait-on": "^9.0.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "dist": "npm run build && electron-builder"
   },
   "browserslist": {
     "production": [
