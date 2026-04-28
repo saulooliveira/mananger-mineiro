@@ -18,3 +18,10 @@
 - ação: criação das tarefas iniciais para Codex/Claude Code
 - compilou: N/A
 - testado: N/A
+
+- autor: Claude Code
+- arquivo: app/backend/*
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Backend base Task 01. Project scaffold, EF Core SQLite, health check, produtos table, optional seed.
