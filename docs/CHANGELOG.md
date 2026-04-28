@@ -25,3 +25,10 @@
 - compilou: sim
 - testado: sim
 - observação: Backend base Task 01. Project scaffold, EF Core SQLite, health check, produtos table, optional seed.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/ProdutoService.cs, app/backend/Controllers/ProdutosController.cs, app/backend/Program.cs
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Task 02 Produtos API. GET /api/produtos and GET /api/produtos/search endpoints with service layer.
