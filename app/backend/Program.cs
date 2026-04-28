@@ -45,4 +45,50 @@ catch (Exception ex)
 app.UseAuthorization();
 app.MapControllers();
 
+// Seed data (optional, for testing UI)
+async Task SeedData()
+{
+    var db = app.Services.CreateScope().ServiceProvider.GetRequiredService<DatabaseContext>();
+    if (db.Produtos.Any()) return; // Already seeded
+
+    var produtos = new[]
+    {
+        new Backend.Models.Produto
+        {
+            Codigo = "001",
+            Descricao = "Café Premium 500g",
+            Categoria = "Bebidas",
+            Valor = 24.90m,
+            Yield = "1kg renders 2 cups"
+        },
+        new Backend.Models.Produto
+        {
+            Codigo = "002",
+            Descricao = "Chocolate 100g",
+            Categoria = "Doces",
+            Valor = 8.50m
+        },
+        new Backend.Models.Produto
+        {
+            Codigo = "003",
+            Descricao = "Leite Integral 1L",
+            Categoria = "Laticínios",
+            Valor = 4.20m
+        },
+        new Backend.Models.Produto
+        {
+            Codigo = "004",
+            Descricao = "Pão Francês kg",
+            Categoria = "Padaria",
+            Valor = 12.00m
+        }
+    };
+
+    await db.Produtos.AddRangeAsync(produtos);
+    await db.SaveChangesAsync();
+    Console.WriteLine("Seed data added: 4 products");
+}
+
+await SeedData();
+
 app.Run();
