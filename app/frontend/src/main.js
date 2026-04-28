@@ -1,15 +1,19 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
+const isDev = process.env.NODE_ENV === 'development';
 
 let mainWindow;
 
 function createWindow() {
+  const preloadPath = isDev
+    ? path.join(__dirname, '../public/preload.js')
+    : path.join(process.resourcesPath, 'app', 'public', 'preload.js');
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, '../public/preload.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true
     }
