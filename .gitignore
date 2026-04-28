@@ -1,75 +1,67 @@
-# Visual Studio / .NET
-.vs/
+# OS and editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.suo
 *.user
 *.userosscache
-*.suo
-*.cache
+*.sln.docstates
+*.sln.iml
+*.iml
+
+# Logs and temporary files
 *.log
-*.ide
+*.tmp
+*.temp
+*.bak
+*.cache
+*.pid
+*.seed
+*~
+*.swp
+*.swo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+
+# .NET
+.vs/
+TestResults/
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+ScaffoldingReadMe.txt
 *.dotCover
 *.ncrunch*
 *.vspscc
-.vscode/
-TestResults/
+
+# Frontend dependencies and build outputs
 node_modules/
+**/node_modules/
+**/build/
+**/dist/
+**/out/
+**/coverage/
+dist-electron/
+*.asar
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local database files
 *.db
 *.db-shm
 *.db-wal
 *.sqlite
 *.sqlite3
-*.bak
-*.tmp
-*.temp
-
-# Build outputs
-**/bin/
-**/obj/
-**/dist/
-**/Release/
-**/Debug/
-**/out/
-**/build/
-**/coverage/
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
-# Rider
-.idea/
-*.sln.iml
-
-# NPM / frontend
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-package-lock.json
-pnpm-lock.yaml
-
-# Electron
-dist-electron/
-*.asar
-
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# JetBrains
-*.iml
-.idea/
-
-# Generated files
-*.pid
-*.seed
-
-# Local environment files
-.env
-.env.*
-appsettings.*.json
-
-# Backup files
-*~
-*.bak
-*.swp
-*.swo
+app/**/data/

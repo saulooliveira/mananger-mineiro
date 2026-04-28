@@ -24,6 +24,7 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 );
 
 builder.Services.AddScoped<ProdutoService>();
+builder.Services.AddScoped<PrintService>();
 
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
@@ -31,7 +32,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("FrontendDev", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000")
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -59,7 +60,7 @@ app.UseCors("FrontendDev");
 app.UseAuthorization();
 app.MapControllers();
 
-// Seed data (optional, for testing UI)
+// Seed data (Debug only, for testing UI with large dataset)
 async Task SeedData()
 {
     try
@@ -69,42 +70,70 @@ async Task SeedData()
             var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
             if (db.Produtos.Any()) return; // Already seeded
 
-            var produtos = new[]
+#if DEBUG
+            var random = new Random(1234);
+            var categorias = new[]
             {
-                new Backend.Models.Produto
-                {
-                    Codigo = "001",
-                    Descricao = "Café Premium 500g",
-                    Categoria = "Bebidas",
-                    Valor = 24.90m,
-                    Yield = "1kg renders 2 cups"
-                },
-                new Backend.Models.Produto
-                {
-                    Codigo = "002",
-                    Descricao = "Chocolate 100g",
-                    Categoria = "Doces",
-                    Valor = 8.50m
-                },
-                new Backend.Models.Produto
-                {
-                    Codigo = "003",
-                    Descricao = "Leite Integral 1L",
-                    Categoria = "Laticínios",
-                    Valor = 4.20m
-                },
-                new Backend.Models.Produto
-                {
-                    Codigo = "004",
-                    Descricao = "Pão Francês kg",
-                    Categoria = "Padaria",
-                    Valor = 12.00m
-                }
+                "Bebidas",
+                "Alimentos",
+                "Padaria",
+                "Hortifruti",
+                "Laticínios",
+                "Congelados",
+                "Carnes",
+                "Doces",
+                "Higiene",
+                "Mercearia"
             };
+
+            var descricoes = new[]
+            {
+                "Água Mineral 1L",
+                "Suco Natural 1L",
+                "Leite Integral 1L",
+                "Pão Francês kg",
+                "Banana Nanica kg",
+                "Maçã Fuji kg",
+                "Tomate Italiano kg",
+                "Queijo Minas 300g",
+                "Iogurte Natural 500g",
+                "Café Torrado 250g",
+                "Arroz Branco 5kg",
+                "Feijão Carioca 1kg",
+                "Carne Bovina kg",
+                "Frango Resfriado kg",
+                "Manteiga 200g",
+                "Chocolate ao Leite 100g",
+                "Biscoito Recheado 200g",
+                "Cerveja Pilsen 350ml",
+                "Água de Coco 500ml",
+                "Azeite Extra Virgem 500ml"
+            };
+
+            var produtos = Enumerable.Range(1, 1000).Select(index =>
+            {
+                var categoria = categorias[random.Next(categorias.Length)];
+                var descricao = $"{descricoes[random.Next(descricoes.Length)]} {index:D4}";
+                var codigo = index.ToString("D4");
+                var valor = Math.Round((decimal)(random.NextDouble() * 40.0 + 1.0), 2);
+                var yieldText = random.Next(2) == 0 ? null : $"{random.Next(1, 5)}kg = {random.Next(1, 20)} unidades";
+
+                return new Backend.Models.Produto
+                {
+                    Codigo = codigo,
+                    Descricao = descricao,
+                    Categoria = categoria,
+                    Valor = valor,
+                    Yield = yieldText
+                };
+            }).ToArray();
 
             await db.Produtos.AddRangeAsync(produtos);
             await db.SaveChangesAsync();
-            Console.WriteLine("Seed data added: 4 products");
+            Console.WriteLine($"Seed data added: {produtos.Length} produtos (Debug only)");
+#else
+            Console.WriteLine("Seed data skipped outside DEBUG.");
+#endif
         }
     }
     catch (Exception ex)
@@ -115,6 +144,8 @@ async Task SeedData()
     }
 }
 
+#if DEBUG
 await SeedData();
+#endif
 
 app.Run();

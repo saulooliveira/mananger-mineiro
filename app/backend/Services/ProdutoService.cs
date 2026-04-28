@@ -30,4 +30,25 @@ public class ProdutoService
                         (p.Categoria != null && p.Categoria.ToLower().Contains(searchLower)))
             .ToListAsync();
     }
+
+    public async Task<List<Produto>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _db.Produtos
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync();
+    }
+
+    public async Task IncrementQuantidadeImpressaAsync(IEnumerable<int> ids)
+    {
+        var produtos = await _db.Produtos
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync();
+
+        foreach (var produto in produtos)
+        {
+            produto.QuantidadeImpresa += 1;
+        }
+
+        await _db.SaveChangesAsync();
+    }
 }

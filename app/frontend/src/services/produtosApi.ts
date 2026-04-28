@@ -28,3 +28,36 @@ export async function getProdutos(search?: string, signal?: AbortSignal): Promis
 
   return (await response.json()) as Produto[];
 }
+
+export async function previewPdf(produtoIds: number[], signal?: AbortSignal): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/print/preview`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ProdutoIds: produtoIds }),
+    signal
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Erro ao gerar preview (${response.status})`);
+  }
+
+  return await response.blob();
+}
+
+export async function confirmPrint(produtoIds: number[]): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/print/confirm`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ProdutoIds: produtoIds })
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Erro ao confirmar impressão (${response.status})`);
+  }
+}

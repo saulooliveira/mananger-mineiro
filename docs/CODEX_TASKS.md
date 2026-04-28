@@ -76,5 +76,5 @@ Após imprimir confirmar:
 - atualizar lista
 - changelog atualizado
 
-## Task 08 — Massa de Testes
-Gerar aleatoriamente massa 1000 produtos mercado
+## Task 09 — Massa de Testes
+Gerar aleatoriamente massa 1000 produtos mercado apenas em Debug
