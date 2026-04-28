@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,8 @@ catch (Exception ex)
 builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseSqlite($"Data Source={dbPath}")
 );
+
+builder.Services.AddScoped<ProdutoService>();
 
 builder.Services.AddControllers();
 
