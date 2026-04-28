@@ -5,9 +5,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 var dbPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "data", "produtos.db");
 var dbDir = Path.GetDirectoryName(dbPath);
-if (dbDir != null && !Directory.Exists(dbDir))
+
+try
 {
-    Directory.CreateDirectory(dbDir);
+    if (dbDir != null && !Directory.Exists(dbDir))
+    {
+        Directory.CreateDirectory(dbDir);
+    }
+}
+catch (Exception ex)
+{
+    throw new InvalidOperationException($"Failed to create database directory: {dbDir}", ex);
 }
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
@@ -19,10 +27,19 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 // Database initialization
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-    db.Database.EnsureCreated();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+        db.Database.EnsureCreated();
+    }
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Failed to initialize database at startup");
+    throw;
 }
 
 app.UseAuthorization();
