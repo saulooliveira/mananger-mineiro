@@ -1,0 +1,75 @@
+# Visual Studio / .NET
+.vs/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.log
+*.ide
+*.dotCover
+*.ncrunch*
+*.vspscc
+.vscode/
+TestResults/
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.bak
+*.tmp
+*.temp
+
+# Build outputs
+**/bin/
+**/obj/
+**/dist/
+**/Release/
+**/Debug/
+**/out/
+**/build/
+**/coverage/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Rider
+.idea/
+*.sln.iml
+
+# NPM / frontend
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+
+# Electron
+dist-electron/
+*.asar
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# JetBrains
+*.iml
+.idea/
+
+# Generated files
+*.pid
+*.seed
+
+# Local environment files
+.env
+.env.*
+appsettings.*.json
+
+# Backup files
+*~
+*.bak
+*.swp
+*.swo

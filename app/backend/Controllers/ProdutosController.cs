@@ -15,8 +15,14 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? search)
     {
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchResults = await _service.SearchAsync(search);
+            return Ok(searchResults);
+        }
+
         var produtos = await _service.GetAllAsync();
         return Ok(produtos);
     }

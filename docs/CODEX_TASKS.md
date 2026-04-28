@@ -75,3 +75,6 @@ Após imprimir confirmar:
 - incrementar quantidade_impressa por produto
 - atualizar lista
 - changelog atualizado
+
+## Task 08 — Massa de Testes
+Gerar aleatoriamente massa 1000 produtos mercado

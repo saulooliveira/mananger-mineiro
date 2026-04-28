@@ -26,6 +26,16 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 builder.Services.AddScoped<ProdutoService>();
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -45,6 +55,7 @@ catch (Exception ex)
     throw;
 }
 
+app.UseCors("FrontendDev");
 app.UseAuthorization();
 app.MapControllers();
 
