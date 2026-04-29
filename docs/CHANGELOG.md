@@ -68,8 +68,8 @@
 - arquivo: app/frontend/src/components/LayoutEditor.tsx, app/frontend/src/styles/layout-editor.css, app/frontend/src/App.tsx, app/frontend/src/components/Sidebar.tsx, app/frontend/src/components/SettingsScreen.tsx
 - ação: alteração (merge SettingsScreen into LayoutEditor)
 - compilou: sim
-- testado: não
-- observação: Merged SettingsScreen functionality into LayoutEditor via tab interface. Added activeTab state switching between Cards and Config tabs. Moved pageMargin, gridColumns, gridRows, gridGapMm configuration into Config tab. Removed SettingsScreen component and routes. Unified all configuration in single layout editor screen.
+- testado: sim
+- observação: Merged SettingsScreen functionality into LayoutEditor via tab interface. Added activeTab state switching between Cards and Config tabs. Moved pageMargin, gridColumns, gridRows, gridGapMm configuration into Config tab. Removed SettingsScreen component and routes. Unified all configuration in single layout editor screen. Verified: GET/POST /api/layout-config endpoints working, config persistence working, tabs toggle correctly between Cards and Config sections.
 
 - autor: Claude Code
 - arquivo: app/backend/Program.cs
