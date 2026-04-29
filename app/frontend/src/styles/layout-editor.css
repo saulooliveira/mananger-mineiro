@@ -1,0 +1,367 @@
+.layout-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.editor-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.save-button,
+.print-button {
+  padding: 8px 16px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.save-button {
+  background: #2196F3;
+}
+
+.save-button:hover {
+  background: #1976D2;
+}
+
+.print-button {
+  background: #4CAF50;
+}
+
+.print-button:hover {
+  background: #45a049;
+}
+
+.editor-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.canvas-section {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.a4-page {
+  width: 210mm;
+  height: 297mm;
+  background: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  margin-top: 24px;
+}
+
+.card {
+  position: absolute;
+  background: #fff;
+  border: 2px solid #ddd;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.card:hover {
+  border-color: #999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card.selected {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.element {
+  position: absolute;
+  cursor: grab;
+  user-select: none;
+  transition: background 0.1s;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.element:hover {
+  background: rgba(33, 150, 243, 0.05);
+}
+
+.element.selected {
+  background: rgba(33, 150, 243, 0.15);
+  outline: 1px dashed #2196F3;
+}
+
+.config-panel {
+  width: 320px;
+  background: white;
+  border-left: 1px solid #e0e0e0;
+  overflow-y: auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.config-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.config-tab {
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.config-tab:hover {
+  color: #333;
+}
+
+.config-tab.active {
+  color: #2196F3;
+  border-bottom-color: #2196F3;
+}
+
+.config-panel h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  padding: 8px 0;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-list {
+  margin-bottom: 24px;
+}
+
+.card-list h4 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.card-button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.card-button:hover {
+  background: #e8e8e8;
+  border-color: #999;
+}
+
+.card-button.active {
+  background: #2196F3;
+  color: white;
+  border-color: #1976D2;
+}
+
+.element-editors {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.element-editor {
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.element-editor.selected {
+  background: #e3f2fd;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.element-editor h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.element-editor label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #555;
+}
+
+.element-editor label input[type="checkbox"] {
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.element-editor label input[type="text"],
+.element-editor label input[type="number"],
+.element-editor label input[type="color"],
+.element-editor label select {
+  flex: 1;
+  margin-left: 8px;
+}
+
+.element-editor input[type="text"],
+.element-editor input[type="number"],
+.element-editor input[type="color"],
+.element-editor select {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.element-editor input[type="text"]:focus,
+.element-editor input[type="number"]:focus,
+.element-editor input[type="color"]:focus,
+.element-editor select:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.position-editor,
+.style-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.style-editor {
+  margin-top: 8px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Print styles */
+@media print {
+  .layout-editor {
+    background: white;
+  }
+
+  .editor-header {
+    display: none;
+  }
+
+  .editor-container {
+    flex-direction: column;
+  }
+
+  .canvas-section {
+    padding: 0;
+    background: white;
+  }
+
+  .config-panel {
+    display: none;
+  }
+
+  .a4-page {
+    width: 210mm;
+    height: 297mm;
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+  }
+
+  .card,
+  .element {
+    position: absolute;
+  }
+}
+
+/* Scrollbar styling */
+.config-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.config-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.config-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.config-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.canvas-section::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.canvas-section::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.canvas-section::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.canvas-section::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

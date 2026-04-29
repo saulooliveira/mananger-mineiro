@@ -1,5 +1,97 @@
 # CHANGELOG
 
+## 2026-04-28 (continued)
+- autor: Claude Code
+- arquivo: app/frontend/src/styles/layout-editor.css
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Layout editor stylesheet. A4 page canvas styling (210x297mm), card and element positioning, config panel layout, print styles.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/App.tsx, app/frontend/src/components/Sidebar.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Integrated LayoutEditor component. Added layout screen routing in App.tsx, added Layout button to Sidebar navigation.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/LayoutConfigController.cs
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Backend endpoint for saving/loading layout configuration. GET/POST /api/layout-config with JSON file persistence.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Refactored to use layout configuration instead of grid-based layout. New LayoutBasedDocument class loads layout-config.json and applies to PDF generation.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added save button to persist layout configuration to backend. Integrated with /api/layout-config endpoint on port 5274. Real-time synchronization of editor state to backend.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração (correção)
+- compilou: sim
+- testado: sim
+- observação: Fixed layout positioning in PDF generation. Now uses X,Y coordinates from layout editor for element placement. RenderElement applies left padding and vertical spacing based on template values. Products selected in Produtos screen now render with layout-editor configuration.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added useEffect hook to load saved layout from backend on component mount. Calls GET /api/layout-config and populates editor with persisted configuration. Layout editor now displays last saved configuration when screen opens.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/UploadController.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Image upload endpoint. POST /api/upload/image saves files to /uploads directory with GUID filenames. Validates image formats (jpg, png, gif, bmp).
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Added imagePath field to Element class. Updated Compose to set page.Margin(0) for full-page layout. Cards now 105x148.5mm with no margins for exact PDF preview match.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx, app/frontend/src/styles/layout-editor.css, app/frontend/src/App.tsx, app/frontend/src/components/Sidebar.tsx, app/frontend/src/components/SettingsScreen.tsx
+- ação: alteração (merge SettingsScreen into LayoutEditor)
+- compilou: sim
+- testado: não
+- observação: Merged SettingsScreen functionality into LayoutEditor via tab interface. Added activeTab state switching between Cards and Config tabs. Moved pageMargin, gridColumns, gridRows, gridGapMm configuration into Config tab. Removed SettingsScreen component and routes. Unified all configuration in single layout editor screen.
+
+- autor: Claude Code
+- arquivo: app/backend/Program.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Added static file serving for uploads directory. StaticFileOptions configured to serve from /uploads path. Enables access to uploaded images in PDF.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Added image upload field to element editor. File input with accept=image/* triggers handleImageUpload. Updates element.imagePath with response from backend upload endpoint.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Added RenderImage method to support image rendering in PDF. RenderElement now checks imagePath and renders image instead of text if path exists. Images served from /uploads directory with MaxWidth constraint.
+
 ## 2026-04-28
 - autor: ChatGPT
 - arquivo: docs/SPEC.md

@@ -11,17 +11,17 @@ public class PrintService
 {
     public byte[] GeneratePreviewPdf(List<Produto> produtos)
     {
-        var config = LoadPdfConfig();
-        var document = new ProductPreviewDocument(produtos, config);
+        var layoutConfig = LoadLayoutConfig();
+        var document = new LayoutBasedDocument(produtos, layoutConfig);
 
         using var stream = new MemoryStream();
         document.GeneratePdf(stream);
         return stream.ToArray();
     }
 
-    private PdfConfig LoadPdfConfig()
+    private LayoutConfig LoadLayoutConfig()
     {
-        var configPath = Path.Combine(AppContext.BaseDirectory, "pdf-config.json");
+        var configPath = Path.Combine(AppContext.BaseDirectory, "layout-config.json");
 
         if (!File.Exists(configPath))
         {
@@ -31,7 +31,7 @@ public class PrintService
         try
         {
             var json = File.ReadAllText(configPath);
-            var config = JsonSerializer.Deserialize<PdfConfig>(json);
+            var config = JsonSerializer.Deserialize<LayoutConfig>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return config ?? GetDefaultConfig();
         }
         catch
@@ -40,47 +40,76 @@ public class PrintService
         }
     }
 
-    private PdfConfig GetDefaultConfig()
+    private LayoutConfig GetDefaultConfig()
     {
-        return new PdfConfig
+        return new LayoutConfig
         {
-            PageMargin = 10,
-            GridColumns = 2,
-            GridRows = 2,
-            GridGapMm = 5,
-            Elements = new Dictionary<string, FontConfig>
+            Cards = new[]
             {
-                { "title", new FontConfig { FontSize = 16, FontFamily = "Arial" } },
-                { "description", new FontConfig { FontSize = 12, FontFamily = "Arial" } },
-                { "price", new FontConfig { FontSize = 20, FontFamily = "Arial Bold" } },
-                { "unit", new FontConfig { FontSize = 10, FontFamily = "Arial" } },
-                { "footer", new FontConfig { FontSize = 8, FontFamily = "Arial" } }
+                new Card
+                {
+                    Id = "default",
+                    X = 10,
+                    Y = 10,
+                    W = 92.5f,
+                    H = 136,
+                    Content = new CardContent
+                    {
+                        Title = new Element { X = 5, Y = 15, Text = "", FontSize = 16, Bold = true, Alignment = "left", Color = "#000", Visible = true },
+                        Subtitle = new Element { X = 5, Y = 30, Text = "", FontSize = 12, Bold = false, Alignment = "left", Color = "#666", Visible = true },
+                        Price = new Element { X = 5, Y = 60, Text = "", FontSize = 20, Bold = true, Alignment = "left", Color = "#000", Visible = true },
+                        Unit = new Element { X = 70, Y = 63, Text = "KG", FontSize = 10, Bold = false, Alignment = "left", Color = "#666", Visible = true },
+                        Footer = new Element { X = 5, Y = 115, Text = "", FontSize = 8, Bold = false, Alignment = "left", Color = "#999", Visible = true }
+                    }
+                }
             }
         };
     }
 }
 
-public class PdfConfig
+public class LayoutConfig
 {
-    public int PageMargin { get; set; } = 10;
-    public int GridColumns { get; set; } = 2;
-    public int GridRows { get; set; } = 2;
-    public int GridGapMm { get; set; } = 5;
-    public Dictionary<string, FontConfig> Elements { get; set; } = new();
+    public Card[] Cards { get; set; } = Array.Empty<Card>();
 }
 
-public class FontConfig
+public class Card
 {
-    public int FontSize { get; set; } = 12;
-    public string FontFamily { get; set; } = "Arial";
+    public string Id { get; set; } = "";
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float W { get; set; }
+    public float H { get; set; }
+    public CardContent Content { get; set; } = new();
 }
 
-internal class ProductPreviewDocument : IDocument
+public class CardContent
+{
+    public Element Title { get; set; } = new();
+    public Element Subtitle { get; set; } = new();
+    public Element Price { get; set; } = new();
+    public Element Unit { get; set; } = new();
+    public Element Footer { get; set; } = new();
+}
+
+public class Element
+{
+    public float X { get; set; }
+    public float Y { get; set; }
+    public string Text { get; set; } = "";
+    public string ImagePath { get; set; } = "";
+    public int FontSize { get; set; }
+    public bool Bold { get; set; }
+    public string Alignment { get; set; } = "left";
+    public string Color { get; set; } = "#000";
+    public bool Visible { get; set; }
+}
+
+internal class LayoutBasedDocument : IDocument
 {
     private readonly List<Produto> _produtos;
-    private readonly PdfConfig _config;
+    private readonly LayoutConfig _config;
 
-    public ProductPreviewDocument(List<Produto> produtos, PdfConfig config)
+    public LayoutBasedDocument(List<Produto> produtos, LayoutConfig config)
     {
         _produtos = produtos;
         _config = config;
@@ -93,7 +122,7 @@ internal class ProductPreviewDocument : IDocument
 
     public void Compose(IDocumentContainer container)
     {
-        var itemsPerPage = _config.GridColumns * _config.GridRows;
+        var itemsPerPage = 4;
         var productGroups = _produtos
             .Select((produto, index) => new { produto, index })
             .GroupBy(x => x.index / itemsPerPage)
@@ -102,64 +131,142 @@ internal class ProductPreviewDocument : IDocument
         container.Page(page =>
         {
             page.Size(PageSizes.A4);
-            page.Margin(_config.PageMargin);
+            page.Margin(0);
             page.DefaultTextStyle(x => x.FontSize(10).FontColor(Colors.Black));
 
-            page.Content().Column(column =>
+            page.Content().Column(pageColumn =>
             {
-                column.Spacing(_config.GridGapMm);
-
                 for (var groupIndex = 0; groupIndex < productGroups.Count; groupIndex++)
                 {
-                    var pageGroup = productGroups[groupIndex];
+                    var pageGroup = productGroups[groupIndex].ToList();
 
-                    column.Item().Grid(grid =>
+                    pageColumn.Item().Column(gridColumn =>
                     {
-                        grid.Columns(_config.GridColumns);
-                        grid.Spacing(_config.GridGapMm);
-
-                        foreach (var item in pageGroup)
+                        for (int row = 0; row < 2; row++)
                         {
-                            grid.Item().Column(card =>
+                            gridColumn.Item().Row(gridRow =>
                             {
-                                card.Spacing(6);
-                                card.Item().Text(item.produto.Codigo).FontSize(GetFontSize("title")).SemiBold();
-                                card.Item().Text(item.produto.Descricao).FontSize(GetFontSize("description")).Bold();
-                                card.Item().Text(item.produto.Categoria ?? "Categoria não definida").FontSize(GetFontSize("unit")).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
-                                card.Item().Text($"Valor: R$ {item.produto.Valor:N2}").FontSize(GetFontSize("price")).Bold();
-
-                                if (!string.IsNullOrWhiteSpace(item.produto.Yield))
+                                for (int col = 0; col < 2; col++)
                                 {
-                                    card.Item().Text($"Yield: {item.produto.Yield}").FontSize(GetFontSize("footer")).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                                    var itemIndex = row * 2 + col;
+                                    if (itemIndex < pageGroup.Count)
+                                    {
+                                        var item = pageGroup[itemIndex];
+                                        var cardTemplate = _config.Cards[itemIndex % _config.Cards.Length];
+
+                                        gridRow.RelativeItem()
+                                            .Width(105, Unit.Millimetre)
+                                            .Height(148.5f, Unit.Millimetre)
+                                            .Column(cardContent =>
+                                            {
+                                                RenderProductCard(cardContent, item.produto, cardTemplate.Content);
+                                            });
+                                    }
+                                    else
+                                    {
+                                        gridRow.RelativeItem();
+                                    }
                                 }
-
-                                card.Item().Text($"Impressões: {item.produto.QuantidadeImpresa}").FontSize(GetFontSize("footer")).FontColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
                             });
-                        }
-
-                        var emptyCount = itemsPerPage - pageGroup.Count();
-                        for (int i = 0; i < emptyCount; i++)
-                        {
-                            grid.Item().Text(string.Empty);
                         }
                     });
 
                     if (groupIndex < productGroups.Count - 1)
                     {
-                        column.Item().PageBreak();
+                        pageColumn.Item().PageBreak();
                     }
                 }
             });
         });
     }
 
-    private int GetFontSize(string elementKey)
+    private void RenderProductCard(ColumnDescriptor card, Produto produto, CardContent template)
     {
-        if (_config.Elements.TryGetValue(elementKey, out var fontConfig))
+        if (template.Title.Visible)
         {
-            return fontConfig.FontSize;
+            RenderElement(card, produto.Codigo, template.Title, 0);
         }
 
-        return 12;
+        if (template.Subtitle.Visible)
+        {
+            RenderElement(card, produto.Descricao, template.Subtitle, template.Subtitle.Y);
+        }
+
+        if (template.Price.Visible)
+        {
+            RenderElement(card, $"R$ {produto.Valor:N2}", template.Price, template.Price.Y);
+        }
+
+        if (template.Unit.Visible && !string.IsNullOrWhiteSpace(template.Unit.Text))
+        {
+            RenderElement(card, template.Unit.Text, template.Unit, template.Unit.Y);
+        }
+
+        if (template.Footer.Visible)
+        {
+            if (!string.IsNullOrWhiteSpace(produto.Yield))
+            {
+                RenderElement(card, $"Yield: {produto.Yield}", template.Footer, template.Footer.Y);
+            }
+
+            RenderElement(card, $"Impressões: {produto.QuantidadeImpresa}", template.Footer, template.Footer.Y + 10);
+        }
+    }
+
+    private void RenderElement(ColumnDescriptor card, string text, Element element, float previousY)
+    {
+        if (!element.Visible) return;
+
+        var spacing = element.Y - previousY;
+        if (spacing > 0)
+        {
+            card.Item().Height(spacing, Unit.Millimetre);
+        }
+
+        if (!string.IsNullOrWhiteSpace(element.ImagePath))
+        {
+            RenderImage(card, element);
+        }
+        else if (!string.IsNullOrWhiteSpace(text))
+        {
+            var textElement = card.Item().PaddingLeft(element.X, Unit.Millimetre).Text(text)
+                .FontSize(element.FontSize)
+                .FontColor(ParseColor(element.Color));
+
+            if (element.Alignment == "center")
+                textElement.AlignCenter();
+            else if (element.Alignment == "right")
+                textElement.AlignRight();
+
+            if (element.Bold) textElement.SemiBold();
+        }
+    }
+
+    private void RenderImage(ColumnDescriptor card, Element element)
+    {
+        var imagePath = element.ImagePath;
+        if (!imagePath.StartsWith("/"))
+        {
+            imagePath = "/" + imagePath;
+        }
+
+        var fullPath = Path.Combine(AppContext.BaseDirectory, imagePath.TrimStart('/'));
+
+        if (File.Exists(fullPath))
+        {
+            card.Item().PaddingLeft(element.X, Unit.Millimetre).MaxWidth(50, Unit.Millimetre).Image(fullPath);
+        }
+    }
+
+    private Color ParseColor(string colorHex)
+    {
+        try
+        {
+            return Color.FromHex(colorHex);
+        }
+        catch
+        {
+            return Colors.Black;
+        }
     }
 }

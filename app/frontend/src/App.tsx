@@ -1,7 +1,7 @@
 import React from 'react';
 import Sidebar from './components/Sidebar';
 import ProdutosScreen from './components/ProdutosScreen';
-import SettingsScreen from './components/SettingsScreen';
+import LayoutEditor from './components/LayoutEditor';
 import './App.css';
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
       <Sidebar currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
       <div className="main-content">
         {currentScreen === 'produtos' && <ProdutosScreen />}
-        {currentScreen === 'config' && <SettingsScreen />}
+        {currentScreen === 'layout' && <LayoutEditor />}
       </div>
     </div>
   );

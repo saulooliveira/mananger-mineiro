@@ -32,10 +32,10 @@ function Sidebar({ currentScreen, setCurrentScreen }: SidebarProps) {
           📋 Histórico
         </button>
         <button
-          className={`nav-item ${currentScreen === 'config' ? 'active' : ''}`}
-          onClick={() => setCurrentScreen('config')}
+          className={`nav-item ${currentScreen === 'layout' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('layout')}
         >
-          ⚙️ Config
+          🎨 Layout
         </button>
       </nav>
     </aside>
