@@ -15,8 +15,8 @@ Unified build pipeline for generating single portable EXE with embedded .NET 8 r
 ### Prerequisites
 - Windows 10/11
 - .NET 8 SDK: https://dotnet.microsoft.com/download/dotnet/8.0
-- Node.js 18+: https://nodejs.org/
-- npm 9+ (bundled with Node.js)
+- Node.js 20+: https://nodejs.org/
+- npm 10+ (bundled with Node.js)
 
 ### Quick Build
 
