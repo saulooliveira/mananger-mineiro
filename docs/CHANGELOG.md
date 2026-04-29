@@ -186,3 +186,10 @@
 - compilou: sim
 - testado: sim
 - observação: Added PDF configuration settings screen. Visual form builder for page margin, grid layout (columns/rows/gap), element fonts (size + family). Backend endpoint saves/loads config from json file. Five configurable elements: title, description, price, unit, footer.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Integrated PDF config into PrintService. Loads pdf-config.json, applies page margin, grid layout, and font sizes to PDF generation. Dynamic items per page based on config.
