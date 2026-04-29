@@ -26,6 +26,25 @@
     "dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
     "dist": "npm run build && electron-builder"
   },
+  "build": {
+    "appId": "com.gerador-ofertas.app",
+    "productName": "Gerador de Ofertas",
+    "files": [
+      "src/main.js",
+      "public/preload.js",
+      "build/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ]
+    }
+  },
   "browserslist": {
     "production": [
       ">0.2%",
