@@ -38,7 +38,7 @@ Three-layer desktop architecture:
 - Electron main process (app initialization, window management)
 - React components: products table, selection panel, PDF preview
 - State: selected items (must be multiple of 4)
-- HTTP calls to local backend (http://localhost:5000)
+- HTTP calls to local backend (http://localhost:5274)
 
 ### Backend (`/app/backend`)
 - .NET 8 API with SQLite
@@ -79,19 +79,31 @@ npm run lint     # if linter configured
 ```bash
 # Terminal 1: Backend
 cd app/backend && dotnet run
-# Backend will listen on http://localhost:5000
+# Backend will listen on http://localhost:5274
 
 # Terminal 2: Frontend (Electron dev server)
 cd app/frontend && npm start
 ```
 
+### Build Single Portable EXE (Distribution)
+```bash
+# From project root (requires .NET 8 + Node.js 18+)
+.\build.ps1 -Configuration release
+
+# Output: ./dist/Gerador de Ofertas.exe (~150-200 MB)
+# Self-contained (no .NET installation required)
+# Single file, portable, ready to distribute
+
+# See docs/BUILD.md for detailed documentation
+```
+
 ## Key Integration Points
 
 **Frontend → Backend HTTP calls:**
-- `GET http://localhost:5000/produtos` — fetch all products
-- `GET http://localhost:5000/produtos?search=texto` — search products
-- `POST http://localhost:5000/print/preview` — generate PDF preview
-- `POST http://localhost:5000/print/confirm` — confirm print, increment quantities
+- `GET http://localhost:5274/produtos` — fetch all products
+- `GET http://localhost:5274/produtos?search=texto` — search products
+- `POST http://localhost:5274/print/preview` — generate PDF preview
+- `POST http://localhost:5274/print/confirm` — confirm print, increment quantities
 
 **Selection validation:**
 Only 4, 8, 12, 16... items allowed. Check in frontend:
@@ -175,7 +187,7 @@ MVP is ready when:
 
 ## Common Issues
 
-- **Backend not responding**: Check `localhost:5000/health` or check .NET 8 installation
+- **Backend not responding**: Check `localhost:5274/health` or check .NET 8 installation
 - **Selection invalid**: Verify selection count % 4 === 0 before allowing preview
 - **PDF blank**: Check QuestPDF setup in backend, verify product data passed to PDF service
 - **Electron IPC blocked**: Ensure frontend waits for backend to start before making HTTP calls
