@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/produtos.css';
 import { Produto, getProdutos, previewPdf, confirmPrint } from '../services/produtosApi';
+import PdfModal from './PdfModal';
 
 function ProdutosScreen() {
   const [search, setSearch] = React.useState('');
@@ -15,6 +16,7 @@ function ProdutosScreen() {
   const [confirmLoading, setConfirmLoading] = React.useState(false);
   const [confirmError, setConfirmError] = React.useState<string | null>(null);
   const [confirmSuccess, setConfirmSuccess] = React.useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     return () => {
@@ -48,6 +50,7 @@ function ProdutosScreen() {
       const blob = await previewPdf(selecionados.map((produto) => produto.id));
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
+      setIsModalOpen(true);
     } catch (err) {
       setPreviewError('Falha ao gerar o preview. Verifique a API e tente novamente.');
     } finally {
@@ -350,15 +353,6 @@ function ProdutosScreen() {
           {previewError && <div className="preview-error">{previewError}</div>}
           {confirmError && <div className="preview-error">{confirmError}</div>}
           {confirmSuccess && <div className="preview-success">{confirmSuccess}</div>}
-          {previewUrl && (
-            <div className="preview-frame-wrapper">
-              <iframe
-                src={previewUrl}
-                title="Preview de Ofertas"
-                className="preview-frame"
-              />
-            </div>
-          )}
 
           <div className="selected-pages">
             {paginasSelecionadas.length === 0 && (
@@ -390,6 +384,14 @@ function ProdutosScreen() {
           </div>
         </aside>
       </div>
+
+      <PdfModal
+        isOpen={isModalOpen}
+        pdfUrl={previewUrl}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        onPrint={handlePrint}
+      />
     </div>
   );
 }
