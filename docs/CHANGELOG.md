@@ -172,3 +172,10 @@
 - compilou: sim
 - testado: sim
 - observação: Added alphabetical initial letter filter (A-Z + Todos button). Filters products by first character of description. Responsive button layout, integrates with existing filters.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/ProdutosScreen.tsx
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Removed separate confirm print button. Print button now automatically confirms print and increments quantidade_impressa. Simplified workflow with single action.
