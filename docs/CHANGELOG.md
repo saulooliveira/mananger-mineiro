@@ -158,3 +158,10 @@
 - compilou: sim
 - testado: sim
 - observação: Fixed print button to print PDF directly using native browser PDF viewer instead of HTML wrapper.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/ProdutosScreen.tsx, app/frontend/src/styles/produtos.css
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added pagination (10 items/page) and filters for código, descrição, categoria. Client-side filtering with clear filters button, pagination controls with previous/next navigation.
