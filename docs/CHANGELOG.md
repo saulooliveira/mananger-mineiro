@@ -151,3 +151,10 @@
 - compilou: sim
 - testado: sim
 - observação: Added PDF preview modal. Modal opens when clicking preview button, displays PDF with save/print/close actions. Removed inline iframe from sidebar.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/ProdutosScreen.tsx
+- ação: correção
+- compilou: sim
+- testado: sim
+- observação: Fixed print button to print PDF directly using native browser PDF viewer instead of HTML wrapper.
