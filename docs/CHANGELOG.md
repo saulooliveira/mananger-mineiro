@@ -130,3 +130,10 @@
 - compilou: sim
 - testado: sim
 - observação: Fixed Electron module loading. Replace electron-is-dev with process.env.NODE_ENV check (CommonJS compatible). Update preload path for packaged builds using process.resourcesPath.
+
+- autor: Claude Code
+- arquivo: app/frontend/package.json
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added electron-builder config: explicit file inclusion (src/main.js, public/, build/), Windows targets (portable + NSIS). Fixes packaged app module resolution.
