@@ -137,3 +137,10 @@
 - compilou: sim
 - testado: sim
 - observação: Added electron-builder config: explicit file inclusion (src/main.js, public/, build/), Windows targets (portable + NSIS). Fixes packaged app module resolution.
+
+- autor: Claude Code
+- arquivo: app/backend/Program.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added QuestPDF Community license configuration to disable license validation exception at startup.
