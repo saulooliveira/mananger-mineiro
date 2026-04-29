@@ -193,3 +193,10 @@
 - compilou: sim
 - testado: sim
 - observação: Integrated PDF config into PrintService. Loads pdf-config.json, applies page margin, grid layout, and font sizes to PDF generation. Dynamic items per page based on config.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: correção
+- compilou: sim
+- testado: sim
+- observação: Cleaned PDF layout: removed title (Preview de Ofertas), total count, borders, and lines. Minimalist design with only grid spacing.
