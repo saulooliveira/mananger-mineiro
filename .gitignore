@@ -65,3 +65,7 @@ pnpm-debug.log*
 *.sqlite
 *.sqlite3
 app/**/data/
+node_modules/
+app/frontend/node_modules/
+app/backend/bin/
+app/backend/obj/
