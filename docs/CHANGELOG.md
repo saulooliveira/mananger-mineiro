@@ -179,3 +179,10 @@
 - compilou: sim
 - testado: sim
 - observação: Removed separate confirm print button. Print button now automatically confirms print and increments quantidade_impressa. Simplified workflow with single action.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/SettingsScreen.tsx, app/frontend/src/styles/settings.css, app/frontend/src/App.tsx, app/backend/Controllers/PdfConfigController.cs
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Added PDF configuration settings screen. Visual form builder for page margin, grid layout (columns/rows/gap), element fonts (size + family). Backend endpoint saves/loads config from json file. Five configurable elements: title, description, price, unit, footer.
