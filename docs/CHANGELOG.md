@@ -165,3 +165,10 @@
 - compilou: sim
 - testado: sim
 - observação: Added pagination (10 items/page) and filters for código, descrição, categoria. Client-side filtering with clear filters button, pagination controls with previous/next navigation.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/ProdutosScreen.tsx, app/frontend/src/styles/produtos.css
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added alphabetical initial letter filter (A-Z + Todos button). Filters products by first character of description. Responsive button layout, integrates with existing filters.
