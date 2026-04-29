@@ -77,22 +77,7 @@ function ProdutosScreen() {
     document.body.removeChild(link);
   };
 
-  const handlePrint = () => {
-    if (!selecaoValida || !previewUrl) {
-      return;
-    }
-
-    const printWindow = window.open(previewUrl, '_blank');
-    if (!printWindow) {
-      return;
-    }
-
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
-  };
-
-  const handleConfirmPrint = async () => {
+  const handlePrint = async () => {
     if (!selecaoValida || !previewUrl) {
       return;
     }
@@ -106,6 +91,13 @@ function ProdutosScreen() {
       setConfirmSuccess('Impressão confirmada. Quantidade impressa atualizada.');
       const refreshed = await getProdutos(debouncedSearch);
       setProdutos(refreshed);
+
+      const printWindow = window.open(previewUrl, '_blank');
+      if (printWindow) {
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      }
     } catch (err) {
       setConfirmError('Falha ao confirmar impressão. Tente novamente.');
     } finally {
@@ -449,18 +441,9 @@ function ProdutosScreen() {
               type="button"
               className="print-button"
               onClick={handlePrint}
-              disabled={!selecaoValida || !previewUrl}
-            >
-              Imprimir
-            </button>
-
-            <button
-              type="button"
-              className="confirm-button"
-              onClick={handleConfirmPrint}
               disabled={!selecaoValida || !previewUrl || confirmLoading}
             >
-              {confirmLoading ? 'Confirmando...' : 'Confirmar impressão'}
+              {confirmLoading ? 'Confirmando...' : 'Imprimir'}
             </button>
           </div>
 
