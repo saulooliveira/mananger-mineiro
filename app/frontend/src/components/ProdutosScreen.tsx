@@ -76,13 +76,14 @@ function ProdutosScreen() {
       return;
     }
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open(previewUrl, '_blank');
     if (!printWindow) {
       return;
     }
 
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Imprimir Ofertas</title></head><body style="margin:0"><iframe src="${previewUrl}" style="border:none;width:100%;height:100vh;" onload="window.focus();window.print();"></iframe></body></html>`);
-    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const handleConfirmPrint = async () => {
