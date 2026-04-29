@@ -107,23 +107,20 @@ internal class ProductPreviewDocument : IDocument
 
             page.Content().Column(column =>
             {
-                column.Spacing(10);
-                column.Item().Text("Preview de Ofertas").FontSize(GetFontSize("title")).SemiBold();
-                column.Item().Text($"Total de produtos: {_produtos.Count}").FontSize(10).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
+                column.Spacing(_config.GridGapMm);
 
                 for (var groupIndex = 0; groupIndex < productGroups.Count; groupIndex++)
                 {
                     var pageGroup = productGroups[groupIndex];
 
-                    column.Item().PaddingTop(10).LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
-                    column.Item().PaddingTop(10).Grid(grid =>
+                    column.Item().Grid(grid =>
                     {
                         grid.Columns(_config.GridColumns);
                         grid.Spacing(_config.GridGapMm);
 
                         foreach (var item in pageGroup)
                         {
-                            grid.Item().Padding(8).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2).Column(card =>
+                            grid.Item().Column(card =>
                             {
                                 card.Spacing(6);
                                 card.Item().Text(item.produto.Codigo).FontSize(GetFontSize("title")).SemiBold();
