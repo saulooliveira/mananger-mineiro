@@ -144,3 +144,10 @@
 - compilou: sim
 - testado: sim
 - observação: Added QuestPDF Community license configuration to disable license validation exception at startup.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/PdfModal.tsx, app/frontend/src/styles/pdf-modal.css, app/frontend/src/components/ProdutosScreen.tsx
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Added PDF preview modal. Modal opens when clicking preview button, displays PDF with save/print/close actions. Removed inline iframe from sidebar.
