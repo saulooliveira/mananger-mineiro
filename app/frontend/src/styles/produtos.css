@@ -83,6 +83,83 @@
   border-color: #999;
 }
 
+.letter-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.letter-filters-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.letter-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.letter-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #4a5568;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter-button:hover:not(.active) {
+  border-color: #1976d2;
+  color: #1976d2;
+  background-color: #f0f7ff;
+}
+
+.letter-button.active {
+  background-color: #1976d2;
+  color: white;
+  border-color: #1976d2;
+}
+
+@media (max-width: 1200px) {
+  .letter-buttons {
+    gap: 2px;
+  }
+
+  .letter-button {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 900px) {
+  .letter-filters {
+    margin-bottom: 12px;
+  }
+
+  .letter-buttons {
+    width: 100%;
+  }
+
+  .letter-button {
+    flex: 1;
+    min-width: 24px;
+  }
+}
+
 .produtos-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;

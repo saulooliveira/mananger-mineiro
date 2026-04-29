@@ -20,6 +20,7 @@ function ProdutosScreen() {
   const [filterCode, setFilterCode] = React.useState('');
   const [filterDescription, setFilterDescription] = React.useState('');
   const [filterCategory, setFilterCategory] = React.useState('');
+  const [filterInitial, setFilterInitial] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
@@ -166,9 +167,10 @@ function ProdutosScreen() {
       const matchCode = filterCode === '' || produto.codigo.toLowerCase().includes(filterCode.toLowerCase());
       const matchDesc = filterDescription === '' || produto.descricao.toLowerCase().includes(filterDescription.toLowerCase());
       const matchCat = filterCategory === '' || (produto.categoria?.toLowerCase() ?? '').includes(filterCategory.toLowerCase());
-      return matchCode && matchDesc && matchCat;
+      const matchInitial = filterInitial === '' || produto.descricao.charAt(0).toUpperCase() === filterInitial;
+      return matchCode && matchDesc && matchCat && matchInitial;
     });
-  }, [produtos, filterCode, filterDescription, filterCategory]);
+  }, [produtos, filterCode, filterDescription, filterCategory, filterInitial]);
 
   const totalPages = Math.ceil(filteredProdutos.length / itemsPerPage);
   const displayedProdutos = React.useMemo(() => {
@@ -178,7 +180,7 @@ function ProdutosScreen() {
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [filterCode, filterDescription, filterCategory]);
+  }, [filterCode, filterDescription, filterCategory, filterInitial]);
 
   const selecionadosIds = React.useMemo(() => {
     return new Set(selecionados.map((produto) => produto.id));
@@ -271,7 +273,7 @@ function ProdutosScreen() {
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
         />
-        {(filterCode || filterDescription || filterCategory) && (
+        {(filterCode || filterDescription || filterCategory || filterInitial) && (
           <button
             type="button"
             className="clear-filters-button"
@@ -279,11 +281,35 @@ function ProdutosScreen() {
               setFilterCode('');
               setFilterDescription('');
               setFilterCategory('');
+              setFilterInitial('');
             }}
           >
             Limpar filtros
           </button>
         )}
+      </div>
+
+      <div className="letter-filters">
+        <span className="letter-filters-label">Inicial:</span>
+        <div className="letter-buttons">
+          <button
+            type="button"
+            className={`letter-button ${filterInitial === '' ? 'active' : ''}`}
+            onClick={() => setFilterInitial('')}
+          >
+            Todos
+          </button>
+          {Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map((letter) => (
+            <button
+              key={letter}
+              type="button"
+              className={`letter-button ${filterInitial === letter ? 'active' : ''}`}
+              onClick={() => setFilterInitial(letter)}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="produtos-layout">
