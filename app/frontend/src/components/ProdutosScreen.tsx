@@ -17,6 +17,11 @@ function ProdutosScreen() {
   const [confirmError, setConfirmError] = React.useState<string | null>(null);
   const [confirmSuccess, setConfirmSuccess] = React.useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [filterCode, setFilterCode] = React.useState('');
+  const [filterDescription, setFilterDescription] = React.useState('');
+  const [filterCategory, setFilterCategory] = React.useState('');
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 10;
 
   React.useEffect(() => {
     return () => {
@@ -156,6 +161,25 @@ function ProdutosScreen() {
     return produto.quantidadeImpressa ?? produto.quantidadeImpresa ?? 0;
   };
 
+  const filteredProdutos = React.useMemo(() => {
+    return produtos.filter((produto) => {
+      const matchCode = filterCode === '' || produto.codigo.toLowerCase().includes(filterCode.toLowerCase());
+      const matchDesc = filterDescription === '' || produto.descricao.toLowerCase().includes(filterDescription.toLowerCase());
+      const matchCat = filterCategory === '' || (produto.categoria?.toLowerCase() ?? '').includes(filterCategory.toLowerCase());
+      return matchCode && matchDesc && matchCat;
+    });
+  }, [produtos, filterCode, filterDescription, filterCategory]);
+
+  const totalPages = Math.ceil(filteredProdutos.length / itemsPerPage);
+  const displayedProdutos = React.useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return filteredProdutos.slice(startIdx, startIdx + itemsPerPage);
+  }, [filteredProdutos, currentPage, itemsPerPage]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCode, filterDescription, filterCategory]);
+
   const selecionadosIds = React.useMemo(() => {
     return new Set(selecionados.map((produto) => produto.id));
   }, [selecionados]);
@@ -225,6 +249,43 @@ function ProdutosScreen() {
         </div>
       </div>
 
+      <div className="filters-area">
+        <input
+          type="text"
+          placeholder="Filtrar por código..."
+          className="filter-input"
+          value={filterCode}
+          onChange={(e) => setFilterCode(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por descrição..."
+          className="filter-input"
+          value={filterDescription}
+          onChange={(e) => setFilterDescription(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por categoria..."
+          className="filter-input"
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+        />
+        {(filterCode || filterDescription || filterCategory) && (
+          <button
+            type="button"
+            className="clear-filters-button"
+            onClick={() => {
+              setFilterCode('');
+              setFilterDescription('');
+              setFilterCategory('');
+            }}
+          >
+            Limpar filtros
+          </button>
+        )}
+      </div>
+
       <div className="produtos-layout">
         <div className="produtos-content">
           {loading && (
@@ -245,22 +306,29 @@ function ProdutosScreen() {
             </div>
           )}
 
-          {!loading && !error && produtos.length > 0 && (
-            <div className="table-wrapper">
-              <table className="produtos-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column">Selecionar</th>
-                    <th>ID</th>
-                    <th>Código</th>
-                    <th>Descrição</th>
-                    <th>Categoria</th>
-                    <th>Valor</th>
-                    <th>Quantidade Impressa</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {produtos.map((produto) => {
+          {!loading && !error && produtos.length > 0 && filteredProdutos.length === 0 && (
+            <div className="status-card empty-state">
+              <p>Nenhum produto corresponde aos filtros.</p>
+            </div>
+          )}
+
+          {!loading && !error && filteredProdutos.length > 0 && (
+            <>
+              <div className="table-wrapper">
+                <table className="produtos-table">
+                  <thead>
+                    <tr>
+                      <th className="checkbox-column">Selecionar</th>
+                      <th>ID</th>
+                      <th>Código</th>
+                      <th>Descrição</th>
+                      <th>Categoria</th>
+                      <th>Valor</th>
+                      <th>Quantidade Impressa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayedProdutos.map((produto) => {
                     const selecionado = selecionadosIds.has(produto.id);
 
                     return (
@@ -281,10 +349,38 @@ function ProdutosScreen() {
                         <td>{getQuantidadeImpressa(produto)}</td>
                       </tr>
                     );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="pagination-area">
+                <div className="pagination-info">
+                  Mostrando {displayedProdutos.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, filteredProdutos.length)} de {filteredProdutos.length}
+                </div>
+                <div className="pagination-controls">
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </button>
+                  <span className="pagination-page">
+                    Página {currentPage} de {totalPages || 1}
+                  </span>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
