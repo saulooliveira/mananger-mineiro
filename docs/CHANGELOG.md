@@ -2,6 +2,13 @@
 
 ## 2026-04-29
 - autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Integrated PdfModal component. Print button now generates PDF preview and shows modal with Save/Print/Close buttons, matching Produtos workflow. Uses test product IDs (1-4). Added previewUrl state, cleanup, and handlers (handleSavePdf, handlePrintPdf).
+
+- autor: Claude Code
 - arquivo: app/backend/Data/JsonSerializerContext.cs
 - ação: criação
 - compilou: sim

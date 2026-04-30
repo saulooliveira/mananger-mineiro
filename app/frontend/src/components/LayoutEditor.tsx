@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/layout-editor.css';
+import PdfModal from './PdfModal';
 
 interface Element {
   x: number;
@@ -103,7 +104,18 @@ function LayoutEditor() {
   const [selectedElement, setSelectedElement] = React.useState<string | null>(null);
   const [dragging, setDragging] = React.useState<{ cardId: string; element: string; startX: number; startY: number } | null>(null);
   const [activeTab, setActiveTab] = React.useState<'cards' | 'config'>('cards');
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = React.useState(false);
   const canvasRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   React.useEffect(() => {
     loadLayoutConfig();
@@ -226,6 +238,13 @@ function LayoutEditor() {
 
   const handlePrintLayout = async () => {
     try {
+      setPreviewLoading(true);
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+
       const testProductIds = [1, 2, 3, 4];
 
       const response = await fetch('http://localhost:5274/api/print/preview', {
@@ -243,22 +262,42 @@ function LayoutEditor() {
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-
-      const printWindow = window.open(url, '_blank');
-      if (printWindow) {
-        setTimeout(() => {
-          printWindow.print();
-        }, 250);
-      }
+      setPreviewUrl(url);
+      setIsModalOpen(true);
     } catch (error) {
       alert('Erro ao gerar preview para impressão');
       console.error(error);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleSavePdf = () => {
+    if (!previewUrl) return;
+
+    const link = document.createElement('a');
+    link.href = previewUrl;
+    link.download = 'layout-preview.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrintPdf = () => {
+    if (!previewUrl) return;
+
+    const printWindow = window.open(previewUrl, '_blank');
+    if (printWindow) {
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
     }
   };
 
   const elementKeys = ['title', 'subtitle', 'price', 'unit', 'footer'] as const;
 
   return (
+    <>
     <div className="layout-editor">
       <div className="editor-header">
         <h2>Editor de Layout</h2>
@@ -499,6 +538,15 @@ function LayoutEditor() {
         )}
       </div>
     </div>
+
+    <PdfModal
+      isOpen={isModalOpen}
+      pdfUrl={previewUrl}
+      onClose={() => setIsModalOpen(false)}
+      onSave={handleSavePdf}
+      onPrint={handlePrintPdf}
+    />
+    </>
   );
 }
 
