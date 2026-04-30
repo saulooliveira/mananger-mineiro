@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using Backend.Data;
 using Backend.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -9,9 +10,9 @@ namespace Backend.Services;
 
 public class PrintService
 {
-    public byte[] GeneratePreviewPdf(List<Produto> produtos)
+    public byte[] GeneratePreviewPdf(List<Produto> produtos, LayoutConfig? requestConfig = null)
     {
-        var layoutConfig = LoadLayoutConfig();
+        var layoutConfig = requestConfig ?? LoadLayoutConfig();
         var document = new LayoutBasedDocument(produtos, layoutConfig);
 
         using var stream = new MemoryStream();
@@ -44,64 +45,27 @@ public class PrintService
     {
         return new LayoutConfig
         {
-            Cards = new[]
+            Cards = new List<Card>
             {
                 new Card
                 {
                     Id = "default",
                     X = 10,
                     Y = 10,
-                    W = 92.5f,
+                    W = 92.5,
                     H = 136,
-                    Content = new CardContent
+                    Content = new Dictionary<string, Element>
                     {
-                        Title = new Element { X = 5, Y = 15, Text = "", FontSize = 16, Bold = true, Alignment = "left", Color = "#000", Visible = true },
-                        Subtitle = new Element { X = 5, Y = 30, Text = "", FontSize = 12, Bold = false, Alignment = "left", Color = "#666", Visible = true },
-                        Price = new Element { X = 5, Y = 60, Text = "", FontSize = 20, Bold = true, Alignment = "left", Color = "#000", Visible = true },
-                        Unit = new Element { X = 70, Y = 63, Text = "KG", FontSize = 10, Bold = false, Alignment = "left", Color = "#666", Visible = true },
-                        Footer = new Element { X = 5, Y = 115, Text = "", FontSize = 8, Bold = false, Alignment = "left", Color = "#999", Visible = true }
+                        { "title", new Element { X = 5, Y = 15, Text = "", FontSize = 16, Bold = true, Alignment = "left", Color = "#000", Visible = true } },
+                        { "subtitle", new Element { X = 5, Y = 30, Text = "", FontSize = 12, Bold = false, Alignment = "left", Color = "#666", Visible = true } },
+                        { "price", new Element { X = 5, Y = 60, Text = "", FontSize = 20, Bold = true, Alignment = "left", Color = "#000", Visible = true } },
+                        { "unit", new Element { X = 70, Y = 63, Text = "KG", FontSize = 10, Bold = false, Alignment = "left", Color = "#666", Visible = true } },
+                        { "footer", new Element { X = 5, Y = 115, Text = "", FontSize = 8, Bold = false, Alignment = "left", Color = "#999", Visible = true } }
                     }
                 }
             }
         };
     }
-}
-
-public class LayoutConfig
-{
-    public Card[] Cards { get; set; } = Array.Empty<Card>();
-}
-
-public class Card
-{
-    public string Id { get; set; } = "";
-    public float X { get; set; }
-    public float Y { get; set; }
-    public float W { get; set; }
-    public float H { get; set; }
-    public CardContent Content { get; set; } = new();
-}
-
-public class CardContent
-{
-    public Element Title { get; set; } = new();
-    public Element Subtitle { get; set; } = new();
-    public Element Price { get; set; } = new();
-    public Element Unit { get; set; } = new();
-    public Element Footer { get; set; } = new();
-}
-
-public class Element
-{
-    public float X { get; set; }
-    public float Y { get; set; }
-    public string Text { get; set; } = "";
-    public string ImagePath { get; set; } = "";
-    public int FontSize { get; set; }
-    public bool Bold { get; set; }
-    public string Alignment { get; set; } = "left";
-    public string Color { get; set; } = "#000";
-    public bool Visible { get; set; }
 }
 
 internal class LayoutBasedDocument : IDocument
@@ -152,7 +116,7 @@ internal class LayoutBasedDocument : IDocument
                                     if (itemIndex < pageGroup.Count)
                                     {
                                         var item = pageGroup[itemIndex];
-                                        var cardTemplate = _config.Cards[itemIndex % _config.Cards.Length];
+                                        var cardTemplate = _config.Cards[itemIndex % _config.Cards.Count];
 
                                         gridRow.RelativeItem()
                                             .Column(cardContent =>
@@ -178,36 +142,36 @@ internal class LayoutBasedDocument : IDocument
         });
     }
 
-    private void RenderProductCard(ColumnDescriptor card, Produto produto, CardContent template)
+    private void RenderProductCard(ColumnDescriptor card, Produto produto, Dictionary<string, Element> template)
     {
-        if (template.Title.Visible)
+        if (template.TryGetValue("title", out var title) && title.Visible)
         {
-            RenderElement(card, produto.Codigo, template.Title, 0);
+            RenderElement(card, produto.Codigo, title, 0);
         }
 
-        if (template.Subtitle.Visible)
+        if (template.TryGetValue("subtitle", out var subtitle) && subtitle.Visible)
         {
-            RenderElement(card, produto.Descricao, template.Subtitle, template.Subtitle.Y);
+            RenderElement(card, produto.Descricao, subtitle, (float)subtitle.Y);
         }
 
-        if (template.Price.Visible)
+        if (template.TryGetValue("price", out var price) && price.Visible)
         {
-            RenderElement(card, $"R$ {produto.Valor:N2}", template.Price, template.Price.Y);
+            RenderElement(card, $"R$ {produto.Valor:N2}", price, (float)price.Y);
         }
 
-        if (template.Unit.Visible && !string.IsNullOrWhiteSpace(template.Unit.Text))
+        if (template.TryGetValue("unit", out var unit) && unit.Visible && !string.IsNullOrWhiteSpace(unit.Text))
         {
-            RenderElement(card, template.Unit.Text, template.Unit, template.Unit.Y);
+            RenderElement(card, unit.Text, unit, (float)unit.Y);
         }
 
-        if (template.Footer.Visible)
+        if (template.TryGetValue("footer", out var footer) && footer.Visible)
         {
             if (!string.IsNullOrWhiteSpace(produto.Yield))
             {
-                RenderElement(card, $"Yield: {produto.Yield}", template.Footer, template.Footer.Y);
+                RenderElement(card, $"Yield: {produto.Yield}", footer, (float)footer.Y);
             }
 
-            RenderElement(card, $"Impressões: {produto.QuantidadeImpresa}", template.Footer, template.Footer.Y + 10);
+            RenderElement(card, $"Impressões: {produto.QuantidadeImpresa}", footer, (float)(footer.Y + 10));
         }
     }
 
@@ -215,7 +179,7 @@ internal class LayoutBasedDocument : IDocument
     {
         if (!element.Visible) return;
 
-        var spacing = element.Y - previousY;
+        var spacing = (float)element.Y - previousY;
         if (spacing > 0)
         {
             card.Item().Height(spacing, Unit.Millimetre);
@@ -227,7 +191,7 @@ internal class LayoutBasedDocument : IDocument
         }
         else if (!string.IsNullOrWhiteSpace(text))
         {
-            var textElement = card.Item().PaddingLeft(element.X, Unit.Millimetre).Text(text)
+            var textElement = card.Item().PaddingLeft((float)element.X, Unit.Millimetre).Text(text)
                 .FontSize(element.FontSize)
                 .FontColor(ParseColor(element.Color));
 
@@ -252,7 +216,7 @@ internal class LayoutBasedDocument : IDocument
 
         if (File.Exists(fullPath))
         {
-            card.Item().PaddingLeft(element.X, Unit.Millimetre).MaxWidth(50, Unit.Millimetre).Image(fullPath);
+            card.Item().PaddingLeft((float)element.X, Unit.Millimetre).MaxWidth(50, Unit.Millimetre).Image(fullPath);
         }
     }
 

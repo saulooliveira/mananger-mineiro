@@ -253,6 +253,7 @@ function LayoutEditor() {
         body: JSON.stringify({
           produtoIds: testProductIds,
           editedPrices: {},
+          layoutConfig: config,
         }),
       });
 

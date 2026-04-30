@@ -31,7 +31,7 @@ public class PrintController : ControllerBase
             return NotFound(new ErrorResponse { Error = "Nenhum produto encontrado para os IDs informados." });
         }
 
-        var pdfBytes = _printService.GeneratePreviewPdf(produtos);
+        var pdfBytes = _printService.GeneratePreviewPdf(produtos, request.LayoutConfig);
         return File(pdfBytes, "application/pdf", "preview.pdf");
     }
 
@@ -58,4 +58,5 @@ public class PrintPreviewRequest
 {
     public List<int> ProdutoIds { get; set; } = new();
     public Dictionary<string, decimal> EditedPrices { get; set; } = new();
+    public Backend.Data.LayoutConfig? LayoutConfig { get; set; }
 }

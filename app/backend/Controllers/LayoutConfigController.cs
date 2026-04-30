@@ -56,7 +56,7 @@ public class LayoutConfigController : ControllerBase
     {
         return new
         {
-            cards = new[]
+            cards = new object[]
             {
                 new
                 {
@@ -72,6 +72,54 @@ public class LayoutConfigController : ControllerBase
                         price = new { x = 5, y = 60, text = "2,99", fontSize = 20, bold = true, alignment = "left", color = "#000", visible = true },
                         unit = new { x = 70, y = 63, text = "KG", fontSize = 10, bold = false, alignment = "left", color = "#666", visible = true },
                         footer = new { x = 5, y = 115, text = "Oferta válida enquanto durarem os estoques", fontSize = 8, bold = false, alignment = "left", color = "#999", visible = true }
+                    }
+                },
+                new
+                {
+                    id = "laranja",
+                    x = 107.5,
+                    y = 10,
+                    w = 92.5,
+                    h = 136,
+                    content = new
+                    {
+                        title = new { x = 5, y = 15, text = "LARANJA", fontSize = 16, bold = true, alignment = "left", color = "#000", visible = true },
+                        subtitle = new { x = 5, y = 30, text = "Pera", fontSize = 12, bold = false, alignment = "left", color = "#666", visible = true },
+                        price = new { x = 5, y = 60, text = "3,99", fontSize = 20, bold = true, alignment = "left", color = "#000", visible = true },
+                        unit = new { x = 70, y = 63, text = "KG", fontSize = 10, bold = false, alignment = "left", color = "#666", visible = true },
+                        footer = new { x = 5, y = 115, text = "", fontSize = 8, bold = false, alignment = "left", color = "#999", visible = false }
+                    }
+                },
+                new
+                {
+                    id = "tomate",
+                    x = 10,
+                    y = 151,
+                    w = 92.5,
+                    h = 136,
+                    content = new
+                    {
+                        title = new { x = 5, y = 15, text = "TOMATE", fontSize = 16, bold = true, alignment = "left", color = "#000", visible = true },
+                        subtitle = new { x = 5, y = 30, text = "Salada", fontSize = 12, bold = false, alignment = "left", color = "#666", visible = true },
+                        price = new { x = 5, y = 60, text = "4,99", fontSize = 20, bold = true, alignment = "left", color = "#000", visible = true },
+                        unit = new { x = 70, y = 63, text = "KG", fontSize = 10, bold = false, alignment = "left", color = "#666", visible = true },
+                        footer = new { x = 5, y = 115, text = "", fontSize = 8, bold = false, alignment = "left", color = "#999", visible = false }
+                    }
+                },
+                new
+                {
+                    id = "maracuja",
+                    x = 107.5,
+                    y = 151,
+                    w = 92.5,
+                    h = 136,
+                    content = new
+                    {
+                        title = new { x = 5, y = 15, text = "MARACUJÁ", fontSize = 16, bold = true, alignment = "left", color = "#000", visible = true },
+                        subtitle = new { x = 5, y = 30, text = "Azedo", fontSize = 12, bold = false, alignment = "left", color = "#666", visible = true },
+                        price = new { x = 5, y = 60, text = "6,99", fontSize = 20, bold = true, alignment = "left", color = "#000", visible = true },
+                        unit = new { x = 70, y = 63, text = "KG", fontSize = 10, bold = false, alignment = "left", color = "#666", visible = true },
+                        footer = new { x = 5, y = 115, text = "", fontSize = 8, bold = false, alignment = "left", color = "#999", visible = false }
                     }
                 }
             }

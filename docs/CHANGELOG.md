@@ -3,6 +3,34 @@
 ## 2026-04-29
 
 - autor: Claude Code
+- arquivo: app/backend/Controllers/LayoutConfigController.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Fixed GetDefaultConfig to return 4 cards (cebola, laranja, tomate, maracuja) instead of 1. Changed cards array to explicit object[] to fix type inference error.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Refactored to use Data.LayoutConfig instead of duplicated Services.LayoutConfig. RenderProductCard now accepts Dictionary<string, Element> instead of CardContent. Fixed type mismatches (double→float casts) for QuestPDF API compatibility.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/PrintController.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Added layoutConfig field to PrintPreviewRequest to accept layout configuration from frontend. Passes layout to GeneratePreviewPdf for custom PDF rendering.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Now sends layoutConfig in print preview request. PDF generation uses editor's layout instead of hardcoded backend default.
+
+- autor: Claude Code
 - arquivo: app/frontend/src/components/LayoutEditor.tsx
 - ação: correção
 - compilou: sim
