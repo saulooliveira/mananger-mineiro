@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2026-04-29
+- autor: Claude Code
+- arquivo: .github/workflows/build-exe.yml
+- ação: correção
+- compilou: sim
+- testado: não
+- observação: Changed npm ci to npm install to fix lock file sync issues in GitHub Actions. npm install is more forgiving of minor inconsistencies and will update lock file if needed.
+
 ## 2026-04-28 (continued)
 - autor: Claude Code
 - arquivo: app/frontend/src/styles/layout-editor.css

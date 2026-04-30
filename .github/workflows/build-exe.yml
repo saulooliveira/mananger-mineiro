@@ -34,7 +34,7 @@ jobs:
     - name: Install frontend dependencies
       run: |
         cd app/frontend
-        npm ci
+        npm install
 
     - name: Restore backend dependencies
       run: |
