@@ -2,6 +2,8 @@ using Backend.Data;
 using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -29,7 +31,12 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<PrintService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.TypeInfoResolver = AppJsonSerializerContext.Default;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>

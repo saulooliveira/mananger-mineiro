@@ -2,6 +2,20 @@
 
 ## 2026-04-29
 - autor: Claude Code
+- arquivo: app/backend/Data/JsonSerializerContext.cs
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Created JsonSourceGenerationContext to fix trimmed build JSON serialization errors. Declares all types (Produto, LayoutConfig, Card, Element, UploadResponse) for source generation. Registered in Program.cs AddControllers().
+
+- autor: Claude Code
+- arquivo: app/backend/Program.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Added JsonSerializerContext registration to AddControllers() options. Fixes NotSupportedException for List<Produto> in PublishTrimmed builds. Added using directives for System.Text.Json.
+
+- autor: Claude Code
 - arquivo: app/frontend/src/components/LayoutEditor.tsx
 - ação: alteração
 - compilou: sim
