@@ -1,0 +1,19 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - heading "Ofertas" [level=1] [ref=e6]
+    - navigation [ref=e7]:
+      - button "📦 Produtos" [ref=e8] [cursor=pointer]
+      - button "🖨️ Impressão" [ref=e9] [cursor=pointer]
+      - button "📋 Histórico" [ref=e10] [cursor=pointer]
+      - button "🎨 Layout" [active] [ref=e11] [cursor=pointer]
+  - generic [ref=e182]:
+    - generic [ref=e183]:
+      - heading "Editor de Layout" [level=2] [ref=e184]
+      - generic [ref=e185]:
+        - button "💾 Salvar Layout" [ref=e186] [cursor=pointer]
+        - button "Imprimir" [ref=e187] [cursor=pointer]
+    - generic [ref=e191] [cursor=pointer]:
+      - generic [ref=e192]: TESTE
+      - generic [ref=e193]: Teste
+      - generic [ref=e194]: 1,99
+      - generic [ref=e195]: UN

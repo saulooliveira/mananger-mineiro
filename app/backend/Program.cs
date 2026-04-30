@@ -31,12 +31,7 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<PrintService>();
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.TypeInfoResolver = AppJsonSerializerContext.Default;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    });
+builder.Services.AddControllers();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>

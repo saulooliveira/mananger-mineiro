@@ -1,6 +1,28 @@
 # CHANGELOG
 
 ## 2026-04-29
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: correção
+- compilou: sim
+- testado: não
+- observação: Fixed field name in print API call from productIds to produtoIds to match backend expectations. Source-generated JSON deserializer converts camelCase to PascalCase, so produtoIds (JSON) → ProdutoIds (C#).
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: correção
+- compilou: sim
+- testado: sim
+- observação: Fixed QuestPDF layout constraint conflict. Removed fixed Width/Height from items in Row descriptor and set height at row level only. Row now properly distributes 2 columns proportionally. PDF generation works with 2x2 grid layout.
+
+- autor: Claude Code
+- arquivo: app/backend/backend.csproj
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Made PublishTrimmed and PublishReadyToRun conditional on Release configuration only. Allows Debug builds to use reflection-based JSON serialization instead of strict source generation, eliminating NotSupportedException errors for uncovered types. Release builds still get trimming optimizations.
+
 - autor: Claude Code
 - arquivo: app/frontend/src/components/LayoutEditor.tsx
 - ação: alteração

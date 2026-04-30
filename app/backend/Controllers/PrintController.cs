@@ -1,3 +1,4 @@
+using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,13 +22,13 @@ public class PrintController : ControllerBase
     {
         if (request?.ProdutoIds == null || !request.ProdutoIds.Any())
         {
-            return BadRequest(new { error = "É necessário enviar pelo menos um produto." });
+            return BadRequest(new ErrorResponse { Error = "É necessário enviar pelo menos um produto." });
         }
 
         var produtos = await _produtoService.GetByIdsAsync(request.ProdutoIds);
         if (!produtos.Any())
         {
-            return NotFound(new { error = "Nenhum produto encontrado para os IDs informados." });
+            return NotFound(new ErrorResponse { Error = "Nenhum produto encontrado para os IDs informados." });
         }
 
         var pdfBytes = _printService.GeneratePreviewPdf(produtos);
@@ -39,21 +40,22 @@ public class PrintController : ControllerBase
     {
         if (request?.ProdutoIds == null || !request.ProdutoIds.Any())
         {
-            return BadRequest(new { error = "É necessário enviar pelo menos um produto." });
+            return BadRequest(new ErrorResponse { Error = "É necessário enviar pelo menos um produto." });
         }
 
         var produtos = await _produtoService.GetByIdsAsync(request.ProdutoIds);
         if (!produtos.Any())
         {
-            return NotFound(new { error = "Nenhum produto encontrado para os IDs informados." });
+            return NotFound(new ErrorResponse { Error = "Nenhum produto encontrado para os IDs informados." });
         }
 
         await _produtoService.IncrementQuantidadeImpressaAsync(request.ProdutoIds);
-        return Ok(new { success = true });
+        return Ok(new SuccessResponse { Success = true });
     }
 }
 
 public class PrintPreviewRequest
 {
     public List<int> ProdutoIds { get; set; } = new();
+    public Dictionary<string, decimal> EditedPrices { get; set; } = new();
 }

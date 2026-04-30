@@ -7,8 +7,8 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed Condition="'$(Configuration)'=='Release'">true</PublishTrimmed>
+    <PublishReadyToRun Condition="'$(Configuration)'=='Release'">true</PublishReadyToRun>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 

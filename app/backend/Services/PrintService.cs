@@ -144,7 +144,7 @@ internal class LayoutBasedDocument : IDocument
                     {
                         for (int row = 0; row < 2; row++)
                         {
-                            gridColumn.Item().Row(gridRow =>
+                            gridColumn.Item().Height(148.5f, Unit.Millimetre).Row(gridRow =>
                             {
                                 for (int col = 0; col < 2; col++)
                                 {
@@ -155,8 +155,6 @@ internal class LayoutBasedDocument : IDocument
                                         var cardTemplate = _config.Cards[itemIndex % _config.Cards.Length];
 
                                         gridRow.RelativeItem()
-                                            .Width(105, Unit.Millimetre)
-                                            .Height(148.5f, Unit.Millimetre)
                                             .Column(cardContent =>
                                             {
                                                 RenderProductCard(cardContent, item.produto, cardTemplate.Content);

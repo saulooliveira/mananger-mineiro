@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Backend.Models;
+using Backend.Controllers;
 
 namespace Backend.Data;
 
@@ -10,9 +11,15 @@ namespace Backend.Data;
 )]
 [JsonSerializable(typeof(Produto))]
 [JsonSerializable(typeof(List<Produto>))]
+[JsonSerializable(typeof(List<int>))]
 [JsonSerializable(typeof(LayoutConfig))]
 [JsonSerializable(typeof(UploadResponse))]
+[JsonSerializable(typeof(PrintPreviewRequest))]
+[JsonSerializable(typeof(ErrorResponse))]
+[JsonSerializable(typeof(SuccessResponse))]
+[JsonSerializable(typeof(MessageResponse))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
+[JsonSerializable(typeof(Dictionary<string, decimal>))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }
