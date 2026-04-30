@@ -224,6 +224,38 @@ function LayoutEditor() {
     }
   };
 
+  const handlePrintLayout = async () => {
+    try {
+      const testProductIds = [1, 2, 3, 4];
+
+      const response = await fetch('http://localhost:5274/api/print/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productIds: testProductIds,
+          editedPrices: {},
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar PDF');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      }
+    } catch (error) {
+      alert('Erro ao gerar preview para impressão');
+      console.error(error);
+    }
+  };
+
   const elementKeys = ['title', 'subtitle', 'price', 'unit', 'footer'] as const;
 
   return (
@@ -234,8 +266,8 @@ function LayoutEditor() {
           <button type="button" onClick={handleSaveConfig} className="save-button">
             💾 Salvar Layout
           </button>
-          <button type="button" onClick={() => window.print()} className="print-button">
-            Imprimir
+          <button type="button" onClick={handlePrintLayout} className="print-button">
+            🖨️ Imprimir
           </button>
         </div>
       </div>

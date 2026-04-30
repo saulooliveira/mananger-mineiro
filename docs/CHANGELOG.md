@@ -2,6 +2,13 @@
 
 ## 2026-04-29
 - autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutEditor.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Added handlePrintLayout() method to print layout with test products (IDs 1-4) using same API as Produtos screen. Button now calls print preview instead of window.print(). Shows layout with 4 test products in 2x2 grid.
+
+- autor: Claude Code
 - arquivo: .github/workflows/build-exe.yml
 - ação: correção
 - compilou: sim
