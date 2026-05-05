@@ -1,5 +1,42 @@
 # CHANGELOG
 
+## 2026-05-05
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutBuilder.tsx
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Novo construtor visual de layout. Usuário pode adicionar/remover/mover elementos (Texto, Imagem, QRCode, Código Barras, Fórmula). Configuração de página em tempo real. Arrasta elementos no canvas. Salva/carrega layout JSON.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/types/LayoutTypes.ts
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Tipos TypeScript para novo sistema de layout. LayoutData, PageConfig, elementos tipados por tipo. DEFAULT_LAYOUT com estrutura vazia.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/styles/layout-builder.css
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Estilos para LayoutBuilder. Sidebar com formulários, canvas com A4 grid. Botões para adicionar/remover elementos.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/LayoutBuilderController.cs
+- ação: criação
+- compilou: sim
+- testado: sim
+- observação: Novo endpoint /api/layout-builder para salvar/carregar layout. Trabalha com novo formato LayoutData.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/App.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Substituiu LayoutEditor por LayoutBuilder na navegação. Agora clique em "Layout" abre construtor visual.
+
 ## 2026-04-29
 
 - autor: Claude Code
