@@ -1,3 +1,4 @@
+using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,41 @@ public class PrintController : ControllerBase
         return File(pdfBytes, "application/pdf", "preview.pdf");
     }
 
+    [HttpPost("builder-preview")]
+    public async Task<IActionResult> BuilderPreview([FromBody] object rawRequest)
+    {
+        var request = (rawRequest as System.Text.Json.JsonElement?);
+        if (!request.HasValue)
+        {
+            return BadRequest(new ErrorResponse { Error = "Request inválido" });
+        }
+
+        var req = request.Value;
+        var produtoIds = req.GetProperty("produtoIds").EnumerateArray()
+            .Select(x => x.GetInt32())
+            .ToList();
+
+        if (!produtoIds.Any())
+        {
+            return BadRequest(new ErrorResponse { Error = "É necessário enviar pelo menos um produto." });
+        }
+
+        var produtos = await _produtoService.GetByIdsAsync(produtoIds);
+        if (!produtos.Any())
+        {
+            return NotFound(new ErrorResponse { Error = "Nenhum produto encontrado para os IDs informados." });
+        }
+
+        object? layout = null;
+        if (req.TryGetProperty("layout", out var layoutProp))
+        {
+            layout = layoutProp;
+        }
+
+        var pdfBytes = _printService.GenerateBuilderPdf(produtos, layout);
+        return File(pdfBytes, "application/pdf", "builder-preview.pdf");
+    }
+
     [HttpPost("confirm")]
     public async Task<IActionResult> Confirm([FromBody] PrintPreviewRequest request)
     {
@@ -60,3 +96,4 @@ public class PrintPreviewRequest
     public Dictionary<string, decimal> EditedPrices { get; set; } = new();
     public Backend.Data.LayoutConfig? LayoutConfig { get; set; }
 }
+

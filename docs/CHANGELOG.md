@@ -3,6 +3,34 @@
 ## 2026-05-05
 
 - autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Adicionado GenerateBuilderPdf() que renderiza PDF usando LayoutBuilderData. BuilderBasedDocument renderiza elementos configuráveis (texto, imagem, fórmula). Suporta renderização de campos do banco, textos fixos e fórmulas.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/PrintController.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Adicionado endpoint POST /api/print/builder-preview que aceita produtoIds e layout configurável. Retorna PDF com layout customizado.
+
+- autor: Claude Code
+- arquivo: app/backend/Data/LayoutBuilderModels.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Simplificado LayoutBuilderElement para classe única não-polimórfica com campos genéricos. Todos tipos (texto, imagem, etc) usam mesma classe.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutBuilder.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado botão "Imprimir (Teste)" que chama /api/print/builder-preview com layout atual. Download PDF com elementos do editor.
+
+- autor: Claude Code
 - arquivo: app/frontend/src/components/LayoutBuilder.tsx
 - ação: criação
 - compilou: sim

@@ -137,6 +137,15 @@
   background: #e68900;
 }
 
+.btn-print {
+  background: #9C27B0;
+  color: white;
+}
+
+.btn-print:hover {
+  background: #7b1fa2;
+}
+
 .builder-canvas {
   flex: 1;
   background: white;

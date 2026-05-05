@@ -157,6 +157,38 @@ const LayoutBuilder: React.FC = () => {
     setDraggingId(null);
   };
 
+  // Imprimir com layout
+  const printLayout = async () => {
+    try {
+      // Teste com produtos 1-4
+      const response = await fetch('http://localhost:5274/api/print/builder-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          produtoIds: [1, 2, 3, 4],
+          layout: layout,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar PDF');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'layout-print.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Erro ao imprimir');
+      console.error(error);
+    }
+  };
+
   // Salvar layout
   const saveLayout = async () => {
     try {
@@ -503,6 +535,9 @@ const LayoutBuilder: React.FC = () => {
           </button>
           <button className="btn-load" onClick={loadLayout}>
             📂 Carregar Layout
+          </button>
+          <button className="btn-print" onClick={printLayout}>
+            🖨️ Imprimir (Teste)
           </button>
         </div>
       </div>
