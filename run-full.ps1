@@ -4,6 +4,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $backendDir = Join-Path $projectRoot 'app\backend'
 $frontendDir = Join-Path $projectRoot 'app\frontend'
+$portsToFree = @(3000, 5000, 5274, 7010)
 
 function Require-Command {
     param([string]$Name)
@@ -13,17 +14,62 @@ function Require-Command {
     }
 }
 
+function Get-ProcessIdsByPort {
+    param([int]$Port)
+
+    $processIds = @()
+
+    try {
+        $processIds = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop |
+            Select-Object -ExpandProperty OwningProcess -Unique
+    } catch {
+        $processIds = netstat -ano -p tcp |
+            Select-String -Pattern "^\s*TCP\s+\S+:$Port\s+\S+\s+LISTENING\s+(\d+)\s*$" |
+            ForEach-Object { [int]$_.Matches[0].Groups[1].Value } |
+            Select-Object -Unique
+    }
+
+    return @($processIds)
+}
+
+function Close-PortProcesses {
+    param([int[]]$Ports)
+
+    foreach ($port in $Ports) {
+        $processIds = @(Get-ProcessIdsByPort -Port $port)
+
+        if ($processIds.Count -eq 0) {
+            Write-Host "Porta $port já está livre."
+            continue
+        }
+
+        foreach ($processId in $processIds) {
+            if ($processId -le 0 -or $processId -eq $PID) {
+                continue
+            }
+
+            Write-Host "Encerrando processo $processId na porta $port..."
+            Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 Require-Command dotnet
 Require-Command npm
 
-Write-Host 'Restaurando dependências do backend...'
-dotnet restore "$backendDir"
-
-Write-Host 'Instalando dependências do frontend...'
-npm install --prefix "$frontendDir"
-
 $backendProcess = $null
 try {
+    Set-Location $projectRoot
+
+    Write-Host 'Limpando portas antes da execução...'
+    Close-PortProcesses -Ports $portsToFree
+
+    Write-Host 'Restaurando dependências do backend...'
+    dotnet restore "$backendDir"
+
+    Write-Host 'Instalando dependências do frontend...'
+    npm install --prefix "$frontendDir"
+
     Write-Host 'Iniciando backend...'
     $backendProcess = Start-Process -FilePath dotnet -ArgumentList 'run' -WorkingDirectory $backendDir -NoNewWindow -PassThru
 
@@ -71,4 +117,6 @@ try {
         Write-Host 'Encerrando backend...'
         Stop-Process -Id $backendProcess.Id -ErrorAction SilentlyContinue
     }
+
+    Set-Location $projectRoot
 }

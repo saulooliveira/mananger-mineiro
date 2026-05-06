@@ -363,6 +363,7 @@ internal class BuilderBasedDocument : IDocument
                                         var produto = pageGroup[itemIndex].produto;
                                         gridRow.RelativeItem()
                                             .Width((float)_layout.Page.CardWidthMm, Unit.Millimetre)
+                                            .Height((float)_layout.Page.CardHeightMm, Unit.Millimetre)
                                             .Column(cardContent =>
                                             {
                                                 RenderCard(cardContent, produto);
@@ -393,12 +394,23 @@ internal class BuilderBasedDocument : IDocument
 
     private void RenderCard(ColumnDescriptor card, Produto produto)
     {
-        foreach (var element in _layout.Elements)
+        var sortedElements = _layout.Elements.OrderBy(e => e.YMm).ThenBy(e => e.XMm).ToList();
+        var currentY = 0f;
+
+        foreach (var element in sortedElements)
         {
             var x = (float)element.XMm;
             var y = (float)element.YMm;
             var w = (float)element.WidthMm;
             var h = (float)element.HeightMm;
+
+            // Add spacing to reach absolute Y position
+            if (y > currentY)
+            {
+                var spacing = y - currentY;
+                card.Item().Height(spacing, Unit.Millimetre);
+                currentY = y;
+            }
 
             if (element.Type == "qrcode")
             {
@@ -410,7 +422,6 @@ internal class BuilderBasedDocument : IDocument
                     {
                         card.Item()
                             .PaddingLeft(x, Unit.Millimetre)
-                            .PaddingTop(y, Unit.Millimetre)
                             .Width(w, Unit.Millimetre)
                             .Height(h, Unit.Millimetre)
                             .Image(imagePath);
@@ -428,24 +439,19 @@ internal class BuilderBasedDocument : IDocument
                     {
                         card.Item()
                             .PaddingLeft(x, Unit.Millimetre)
-                            .PaddingTop(y, Unit.Millimetre)
                             .Width(w, Unit.Millimetre)
                             .Height(h, Unit.Millimetre)
                             .Image(imagePath);
                     }
                 }
             }
-            else
+            else if (element.Type == "text" || element.Type == "formula")
             {
                 var text = GetElementText(element, produto);
-                if (string.IsNullOrWhiteSpace(text))
-                    continue;
-
-                if ((element.Type == "text" || element.Type == "formula") && !string.IsNullOrWhiteSpace(text))
+                if (!string.IsNullOrWhiteSpace(text))
                 {
                     var textElement = card.Item()
                         .PaddingLeft(x, Unit.Millimetre)
-                        .PaddingTop(y, Unit.Millimetre)
                         .Width(w, Unit.Millimetre)
                         .Height(h, Unit.Millimetre)
                         .Text(text)
@@ -460,20 +466,21 @@ internal class BuilderBasedDocument : IDocument
                     if (element.Bold)
                         textElement.SemiBold();
                 }
-                else if (element.Type == "image" && !string.IsNullOrWhiteSpace(element.ImagePath))
+            }
+            else if (element.Type == "image" && !string.IsNullOrWhiteSpace(element.ImagePath))
+            {
+                var fullPath = Path.Combine(AppContext.BaseDirectory, element.ImagePath.TrimStart('/'));
+                if (File.Exists(fullPath))
                 {
-                    var fullPath = Path.Combine(AppContext.BaseDirectory, element.ImagePath.TrimStart('/'));
-                    if (File.Exists(fullPath))
-                    {
-                        card.Item()
-                            .PaddingLeft(x, Unit.Millimetre)
-                            .PaddingTop(y, Unit.Millimetre)
-                            .Width(w, Unit.Millimetre)
-                            .Height(h, Unit.Millimetre)
-                            .Image(fullPath);
-                    }
+                    card.Item()
+                        .PaddingLeft(x, Unit.Millimetre)
+                        .Width(w, Unit.Millimetre)
+                        .Height(h, Unit.Millimetre)
+                        .Image(fullPath);
                 }
             }
+
+            currentY = y + h;
         }
     }
 

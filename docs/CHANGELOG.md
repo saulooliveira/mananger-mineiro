@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-05-05 (Layout Positioning Fix)
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: RenderCard refatorado para simular posicionamento Y absoluto em vez de acumulativo. Ordena elementos por Y/X e calcula espaçamento correto entre renderizações. Corrige problema onde PaddingTop acumulava em Column, distorcendo layouts.
+
 ## 2026-04-29 (Histórico)
 
 - autor: Claude Code
