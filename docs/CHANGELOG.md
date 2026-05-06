@@ -1,5 +1,123 @@
 # CHANGELOG
 
+## 2026-04-29 (Histórico)
+
+- autor: Claude Code
+- arquivo: app/backend/Models/PrintHistory.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Novo modelo para rastrear impressões. Armazena dataHora, produtoIds (CSV), numeroFolhas, quantidadeProdutos.
+
+- autor: Claude Code
+- arquivo: app/backend/Data/DatabaseContext.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado DbSet<PrintHistory> e configuração de tabela PrintHistories.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintHistoryService.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Serviço para adicionar e recuperar histórico. AddPrintAsync calcula folhas (qty/4). GetHistoryAsync retorna últimas 100 impressões.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/HistoryController.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: GET /api/history retorna histórico de impressões. Suporta parâmetro limite.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/PrintController.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Confirm agora chama AddPrintAsync após incrementar quantidade impressa.
+
+- autor: Claude Code
+- arquivo: app/backend/Program.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Registrado PrintHistoryService na injeção de dependência.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/HistoricoScreen.tsx
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Novo componente para exibir histórico. Tabela com: data/hora, produtos, quantidade, folhas. Botão atualizar.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/styles/historico.css
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Estilos para tabela histórico. Responsive, com hover states.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/App.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Importado HistoricoScreen, adicionado renderização condicional para currentScreen='historico'.
+
+## 2026-04-29 (Atualizado)
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/PrintController.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado logging para debug. Log recebe jsonElement completo, extrai layout se presente.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado logging para debug GenerateBuilderPdf. Mostra tipo layout, numero elementos, colunas/linhas.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutBuilder.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado console.log do payload antes envio. Mostra layout completo enviado para API.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/types/LayoutTypes.ts
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Atualizado AVAILABLE_FIELDS com campos reais do banco (codigo, descricao, categoria, valor, yield, quantidadeimpresa).
+
+## 2026-04-29
+
+- autor: Claude Code
+- arquivo: app/backend/Services/BarcodeService.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Refatorado para usar ZXing.Net (0.16.9) em vez de BarcodeLib. GenerateBarcode agora usa BarcodeWriter<Bitmap> com suporte EAN13 e CODE128. QRCoder mantido para geração de QR codes.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/PrintService.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Integrado BarcodeService em BuilderBasedDocument. RenderCard agora gera QR codes e códigos de barras dinamicamente. Suporta tipos "qrcode" e "barcode" com valores derivados de campos ou valores fixos.
+
+- autor: Claude Code
+- arquivo: app/backend/Program.cs
+- ação: alteração
+- compilou: sim
+- testado: sim
+- observação: Registrado BarcodeService na injeção de dependência com AddScoped.
+
 ## 2026-05-05
 
 - autor: Claude Code

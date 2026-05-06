@@ -74,13 +74,12 @@ export interface LayoutData {
 }
 
 export const AVAILABLE_FIELDS = [
+  { value: 'codigo', label: 'Código' },
   { value: 'descricao', label: 'Descrição' },
-  { value: 'preco', label: 'Preço' },
-  { value: 'unidade', label: 'Unidade' },
-  { value: 'codigo_barras', label: 'Código de Barras' },
-  { value: 'produto_id', label: 'ID Produto' },
-  { value: 'origem', label: 'Origem' },
-  { value: 'validade', label: 'Validade' },
+  { value: 'categoria', label: 'Categoria' },
+  { value: 'valor', label: 'Valor' },
+  { value: 'yield', label: 'Rendimento' },
+  { value: 'quantidadeimpresa', label: 'Quantidade Impressa' },
 ];
 
 export const DEFAULT_LAYOUT: LayoutData = {

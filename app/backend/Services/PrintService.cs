@@ -10,6 +10,13 @@ namespace Backend.Services;
 
 public class PrintService
 {
+    private readonly BarcodeService _barcodeService;
+
+    public PrintService(BarcodeService barcodeService)
+    {
+        _barcodeService = barcodeService;
+    }
+
     public byte[] GeneratePreviewPdf(List<Produto> produtos, LayoutConfig? requestConfig = null)
     {
         var layoutConfig = requestConfig ?? LoadLayoutConfig();
@@ -27,23 +34,28 @@ public class PrintService
         if (layoutData == null)
         {
             layout = LoadBuilderLayout();
+            System.Diagnostics.Debug.WriteLine("[PrintService] Using default layout (no data received)");
         }
         else if (layoutData is LayoutBuilderData lbd)
         {
             layout = lbd;
+            System.Diagnostics.Debug.WriteLine($"[PrintService] Using LayoutBuilderData directly. Elements: {lbd.Elements.Count}");
         }
         else if (layoutData is System.Text.Json.JsonElement je)
         {
             var json = je.GetRawText();
+            System.Diagnostics.Debug.WriteLine($"[PrintService] Received JsonElement: {json}");
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             layout = JsonSerializer.Deserialize<LayoutBuilderData>(json, options) ?? LoadBuilderLayout();
+            System.Diagnostics.Debug.WriteLine($"[PrintService] Deserialized layout. Elements: {layout.Elements.Count}. Page: {layout.Page.Columns}x{layout.Page.Rows}");
         }
         else
         {
+            System.Diagnostics.Debug.WriteLine($"[PrintService] Unknown layout data type: {layoutData?.GetType().Name}. Using default.");
             layout = LoadBuilderLayout();
         }
 
-        var document = new BuilderBasedDocument(produtos, layout);
+        var document = new BuilderBasedDocument(produtos, layout, _barcodeService);
 
         using var stream = new MemoryStream();
         document.GeneratePdf(stream);
@@ -306,11 +318,13 @@ internal class BuilderBasedDocument : IDocument
 {
     private readonly List<Produto> _produtos;
     private readonly LayoutBuilderData _layout;
+    private readonly BarcodeService _barcodeService;
 
-    public BuilderBasedDocument(List<Produto> produtos, LayoutBuilderData layout)
+    public BuilderBasedDocument(List<Produto> produtos, LayoutBuilderData layout, BarcodeService barcodeService)
     {
         _produtos = produtos;
         _layout = layout;
+        _barcodeService = barcodeService;
     }
 
     public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -381,45 +395,83 @@ internal class BuilderBasedDocument : IDocument
     {
         foreach (var element in _layout.Elements)
         {
-            var text = GetElementText(element, produto);
-            if (string.IsNullOrWhiteSpace(text))
-                continue;
-
             var x = (float)element.XMm;
             var y = (float)element.YMm;
             var w = (float)element.WidthMm;
             var h = (float)element.HeightMm;
 
-            if ((element.Type == "text" || element.Type == "formula") && !string.IsNullOrWhiteSpace(text))
+            if (element.Type == "qrcode")
             {
-                var textElement = card.Item()
-                    .PaddingLeft(x, Unit.Millimetre)
-                    .PaddingTop(y, Unit.Millimetre)
-                    .Width(w, Unit.Millimetre)
-                    .Height(h, Unit.Millimetre)
-                    .Text(text)
-                    .FontSize(element.FontSize)
-                    .FontColor(ParseColor(element.Color ?? "#000000"));
-
-                if (element.Align == "center")
-                    textElement.AlignCenter();
-                else if (element.Align == "right")
-                    textElement.AlignRight();
-
-                if (element.Bold)
-                    textElement.SemiBold();
-            }
-            else if (element.Type == "image" && !string.IsNullOrWhiteSpace(element.ImagePath))
-            {
-                var fullPath = Path.Combine(AppContext.BaseDirectory, element.ImagePath.TrimStart('/'));
-                if (File.Exists(fullPath))
+                var value = GetElementText(element, produto);
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-                    card.Item()
+                    var imagePath = _barcodeService.GenerateQRCode(value);
+                    if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+                    {
+                        card.Item()
+                            .PaddingLeft(x, Unit.Millimetre)
+                            .PaddingTop(y, Unit.Millimetre)
+                            .Width(w, Unit.Millimetre)
+                            .Height(h, Unit.Millimetre)
+                            .Image(imagePath);
+                    }
+                }
+            }
+            else if (element.Type == "barcode")
+            {
+                var value = GetElementText(element, produto);
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    var barcodeType = element.BarcodeType ?? "ean13";
+                    var imagePath = _barcodeService.GenerateBarcode(value, barcodeType);
+                    if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+                    {
+                        card.Item()
+                            .PaddingLeft(x, Unit.Millimetre)
+                            .PaddingTop(y, Unit.Millimetre)
+                            .Width(w, Unit.Millimetre)
+                            .Height(h, Unit.Millimetre)
+                            .Image(imagePath);
+                    }
+                }
+            }
+            else
+            {
+                var text = GetElementText(element, produto);
+                if (string.IsNullOrWhiteSpace(text))
+                    continue;
+
+                if ((element.Type == "text" || element.Type == "formula") && !string.IsNullOrWhiteSpace(text))
+                {
+                    var textElement = card.Item()
                         .PaddingLeft(x, Unit.Millimetre)
                         .PaddingTop(y, Unit.Millimetre)
                         .Width(w, Unit.Millimetre)
                         .Height(h, Unit.Millimetre)
-                        .Image(fullPath);
+                        .Text(text)
+                        .FontSize(element.FontSize)
+                        .FontColor(ParseColor(element.Color ?? "#000000"));
+
+                    if (element.Align == "center")
+                        textElement.AlignCenter();
+                    else if (element.Align == "right")
+                        textElement.AlignRight();
+
+                    if (element.Bold)
+                        textElement.SemiBold();
+                }
+                else if (element.Type == "image" && !string.IsNullOrWhiteSpace(element.ImagePath))
+                {
+                    var fullPath = Path.Combine(AppContext.BaseDirectory, element.ImagePath.TrimStart('/'));
+                    if (File.Exists(fullPath))
+                    {
+                        card.Item()
+                            .PaddingLeft(x, Unit.Millimetre)
+                            .PaddingTop(y, Unit.Millimetre)
+                            .Width(w, Unit.Millimetre)
+                            .Height(h, Unit.Millimetre)
+                            .Image(fullPath);
+                    }
                 }
             }
         }

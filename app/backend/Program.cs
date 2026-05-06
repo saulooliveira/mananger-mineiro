@@ -30,6 +30,8 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<PrintService>();
+builder.Services.AddScoped<BarcodeService>();
+builder.Services.AddScoped<PrintHistoryService>();
 
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>

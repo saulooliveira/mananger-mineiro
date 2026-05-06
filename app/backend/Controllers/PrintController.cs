@@ -11,11 +11,13 @@ public class PrintController : ControllerBase
 {
     private readonly ProdutoService _produtoService;
     private readonly PrintService _printService;
+    private readonly PrintHistoryService _historyService;
 
-    public PrintController(ProdutoService produtoService, PrintService printService)
+    public PrintController(ProdutoService produtoService, PrintService printService, PrintHistoryService historyService)
     {
         _produtoService = produtoService;
         _printService = printService;
+        _historyService = historyService;
     }
 
     [HttpPost("preview")]
@@ -46,6 +48,8 @@ public class PrintController : ControllerBase
         }
 
         var req = request.Value;
+        System.Diagnostics.Debug.WriteLine($"[PrintController] BuilderPreview request: {req.GetRawText()}");
+
         var produtoIds = req.GetProperty("produtoIds").EnumerateArray()
             .Select(x => x.GetInt32())
             .ToList();
@@ -65,6 +69,11 @@ public class PrintController : ControllerBase
         if (req.TryGetProperty("layout", out var layoutProp))
         {
             layout = layoutProp;
+            System.Diagnostics.Debug.WriteLine($"[PrintController] Layout property found: {layoutProp.GetRawText()}");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("[PrintController] Layout property NOT found in request");
         }
 
         var pdfBytes = _printService.GenerateBuilderPdf(produtos, layout);
@@ -86,6 +95,7 @@ public class PrintController : ControllerBase
         }
 
         await _produtoService.IncrementQuantidadeImpressaAsync(request.ProdutoIds);
+        await _historyService.AddPrintAsync(request.ProdutoIds);
         return Ok(new SuccessResponse { Success = true });
     }
 }

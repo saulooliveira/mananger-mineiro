@@ -2,6 +2,7 @@ import React from 'react';
 import Sidebar from './components/Sidebar';
 import ProdutosScreen from './components/ProdutosScreen';
 import LayoutBuilder from './components/LayoutBuilder';
+import HistoricoScreen from './components/HistoricoScreen';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
       <div className="main-content">
         {currentScreen === 'produtos' && <ProdutosScreen />}
         {currentScreen === 'layout' && <LayoutBuilder />}
+        {currentScreen === 'historico' && <HistoricoScreen />}
       </div>
     </div>
   );

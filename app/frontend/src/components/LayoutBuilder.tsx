@@ -10,6 +10,8 @@ import {
   DEFAULT_LAYOUT,
   AVAILABLE_FIELDS,
 } from '../types/LayoutTypes';
+import { getProdutos, Produto } from '../services/produtosApi';
+import PdfModal from './PdfModal';
 import '../styles/layout-builder.css';
 
 const LayoutBuilder: React.FC = () => {
@@ -17,6 +19,12 @@ const LayoutBuilder: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const selectedElement = layout.elements.find(e => e.id === selectedId);
@@ -157,17 +165,46 @@ const LayoutBuilder: React.FC = () => {
     setDraggingId(null);
   };
 
-  // Imprimir com layout
-  const printLayout = async () => {
+  // Cleanup URL on unmount
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  // Preview com layout
+  const previewLayout = async () => {
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+
     try {
-      // Teste com produtos 1-4
+      // Carregar produtos do banco
+      const produtos = await getProdutos();
+      if (!produtos || produtos.length === 0) {
+        throw new Error('Nenhum produto disponível');
+      }
+
+      // Usar primeiros 8 produtos (2 páginas com layout 2x2)
+      const produtosPreview = produtos.slice(0, 8);
+      const produtoIds = produtosPreview.map(p => p.id);
+
+      const payload = {
+        produtoIds,
+        layout,
+      };
+      console.log('Preview payload:', JSON.stringify(payload, null, 2));
+
       const response = await fetch('http://localhost:5274/api/print/builder-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          produtoIds: [1, 2, 3, 4],
-          layout: layout,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -176,16 +213,39 @@ const LayoutBuilder: React.FC = () => {
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'layout-print.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setPreviewUrl(url);
+      setIsModalOpen(true);
     } catch (error) {
-      alert('Erro ao imprimir');
+      setPreviewError('Falha ao gerar o preview. Verifique a API e tente novamente.');
       console.error(error);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleSave = () => {
+    if (!previewUrl) {
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = previewUrl;
+    link.download = 'layout-print.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    if (!previewUrl) {
+      return;
+    }
+
+    const printWindow = window.open(previewUrl, '_blank');
+    if (printWindow) {
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
     }
   };
 
@@ -505,19 +565,139 @@ const LayoutBuilder: React.FC = () => {
               </div>
             )}
 
+            {selectedElement.type === 'qrcode' && (
+              <>
+                <div className="form-group">
+                  <label>Fonte</label>
+                  <select
+                    value={(selectedElement as QRCodeElement).source}
+                    onChange={e =>
+                      updateElement(selectedId!, { source: e.target.value as 'fixed' | 'field' | 'formula' })
+                    }
+                  >
+                    <option value="fixed">Texto Fixo</option>
+                    <option value="field">Campo do Banco</option>
+                    <option value="formula">Fórmula</option>
+                  </select>
+                </div>
+
+                {(selectedElement as QRCodeElement).source === 'field' && (
+                  <div className="form-group">
+                    <label>Campo</label>
+                    <select
+                      value={(selectedElement as QRCodeElement).fieldName || ''}
+                      onChange={e =>
+                        updateElement(selectedId!, { fieldName: e.target.value })
+                      }
+                    >
+                      <option value="">Selecionar campo</option>
+                      {AVAILABLE_FIELDS.map(f => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {(selectedElement as QRCodeElement).source === 'fixed' && (
+                  <div className="form-group">
+                    <label>Valor</label>
+                    <input
+                      type="text"
+                      value={(selectedElement as QRCodeElement).value || ''}
+                      onChange={e =>
+                        updateElement(selectedId!, { value: e.target.value })
+                      }
+                    />
+                  </div>
+                )}
+
+                {(selectedElement as QRCodeElement).source === 'formula' && (
+                  <div className="form-group">
+                    <label>Fórmula</label>
+                    <textarea
+                      value={(selectedElement as QRCodeElement).formula || ''}
+                      onChange={e =>
+                        updateElement(selectedId!, { formula: e.target.value })
+                      }
+                      placeholder='"https://example.com/" + codigo'
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
             {selectedElement.type === 'barcode' && (
-              <div className="form-group">
-                <label>Tipo</label>
-                <select
-                  value={(selectedElement as BarcodeElement).barcodeType}
-                  onChange={e =>
-                    updateElement(selectedId!, { barcodeType: e.target.value as 'ean13' | 'code128' })
-                  }
-                >
-                  <option value="ean13">EAN-13</option>
-                  <option value="code128">CODE-128</option>
-                </select>
-              </div>
+              <>
+                <div className="form-group">
+                  <label>Tipo</label>
+                  <select
+                    value={(selectedElement as BarcodeElement).barcodeType}
+                    onChange={e =>
+                      updateElement(selectedId!, { barcodeType: e.target.value as 'ean13' | 'code128' })
+                    }
+                  >
+                    <option value="ean13">EAN-13</option>
+                    <option value="code128">CODE-128</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Fonte</label>
+                  <select
+                    value={(selectedElement as BarcodeElement).source}
+                    onChange={e =>
+                      updateElement(selectedId!, { source: e.target.value as 'fixed' | 'field' | 'formula' })
+                    }
+                  >
+                    <option value="fixed">Texto Fixo</option>
+                    <option value="field">Campo do Banco</option>
+                    <option value="formula">Fórmula</option>
+                  </select>
+                </div>
+
+                {(selectedElement as BarcodeElement).source === 'field' && (
+                  <div className="form-group">
+                    <label>Campo</label>
+                    <select
+                      value={(selectedElement as BarcodeElement).fieldName || ''}
+                      onChange={e =>
+                        updateElement(selectedId!, { fieldName: e.target.value })
+                      }
+                    >
+                      <option value="">Selecionar campo</option>
+                      {AVAILABLE_FIELDS.map(f => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {(selectedElement as BarcodeElement).source === 'fixed' && (
+                  <div className="form-group">
+                    <label>Valor</label>
+                    <input
+                      type="text"
+                      value={(selectedElement as BarcodeElement).value || ''}
+                      onChange={e =>
+                        updateElement(selectedId!, { value: e.target.value })
+                      }
+                    />
+                  </div>
+                )}
+
+                {(selectedElement as BarcodeElement).source === 'formula' && (
+                  <div className="form-group">
+                    <label>Fórmula</label>
+                    <textarea
+                      value={(selectedElement as BarcodeElement).formula || ''}
+                      onChange={e =>
+                        updateElement(selectedId!, { formula: e.target.value })
+                      }
+                      placeholder='codigo'
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <button
@@ -536,9 +716,14 @@ const LayoutBuilder: React.FC = () => {
           <button className="btn-load" onClick={loadLayout}>
             📂 Carregar Layout
           </button>
-          <button className="btn-print" onClick={printLayout}>
-            🖨️ Imprimir (Teste)
+          <button
+            className="btn-print"
+            onClick={previewLayout}
+            disabled={previewLoading}
+          >
+            {previewLoading ? '⏳ Gerando...' : '🖨️ Preview'}
           </button>
+          {previewError && <div className="error-message">{previewError}</div>}
         </div>
       </div>
 
@@ -618,6 +803,14 @@ const LayoutBuilder: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <PdfModal
+        isOpen={isModalOpen}
+        pdfUrl={previewUrl}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        onPrint={handlePrint}
+      />
     </div>
   );
 };
