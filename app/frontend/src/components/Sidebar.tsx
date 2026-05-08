@@ -32,6 +32,12 @@ function Sidebar({ currentScreen, setCurrentScreen }: SidebarProps) {
           📋 Histórico
         </button>
         <button
+          className={`nav-item ${currentScreen === 'importacao' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('importacao')}
+        >
+          📥 Importação
+        </button>
+        <button
           className={`nav-item ${currentScreen === 'layout' ? 'active' : ''}`}
           onClick={() => setCurrentScreen('layout')}
         >

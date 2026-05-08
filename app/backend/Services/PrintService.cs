@@ -363,13 +363,32 @@ internal class BuilderBasedDocument : IDocument
         {
             var value = GetElementText(element, produto);
             if (string.IsNullOrWhiteSpace(value))
+            {
+                Console.WriteLine($"[PrintService] Barcode value vazio para {element.FieldName}");
                 return;
+            }
 
             var barcodeType = element.BarcodeType ?? "ean13";
-            var imagePath = _barcodeService.GenerateBarcode(value, barcodeType);
-            if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+            Console.WriteLine($"[PrintService] Gerando barcode: tipo={barcodeType}, valor={value}");
+
+            try
             {
-                container.Image(imagePath).FitArea();
+                var imagePath = _barcodeService.GenerateBarcode(value, barcodeType);
+                Console.WriteLine($"[PrintService] Barcode gerado: {imagePath}");
+
+                if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+                {
+                    Console.WriteLine($"[PrintService] Renderizando barcode: {imagePath}");
+                    container.Image(imagePath).FitArea();
+                }
+                else
+                {
+                    Console.WriteLine($"[PrintService] Arquivo barcode não existe ou caminho vazio: {imagePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PrintService] Erro ao gerar barcode: {ex.Message}");
             }
 
             return;

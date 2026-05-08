@@ -51,4 +51,31 @@ public class ProdutoService
 
         await _db.SaveChangesAsync();
     }
+
+    public async Task<(int Inserted, int Updated)> UpsertAsync(IEnumerable<Produto> incoming)
+    {
+        var existing = await _db.Produtos.ToDictionaryAsync(p => p.Codigo.ToUpperInvariant());
+        int inserted = 0, updated = 0;
+
+        foreach (var item in incoming)
+        {
+            var key = item.Codigo.ToUpperInvariant();
+            if (existing.TryGetValue(key, out var found))
+            {
+                found.Descricao = item.Descricao;
+                found.Categoria = item.Categoria;
+                found.Valor = item.Valor;
+                found.Yield = item.Yield;
+                updated++;
+            }
+            else
+            {
+                _db.Produtos.Add(item);
+                inserted++;
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return (inserted, updated);
+    }
 }

@@ -32,6 +32,7 @@ builder.Services.AddScoped<ProdutoService>();
 builder.Services.AddScoped<PrintService>();
 builder.Services.AddScoped<BarcodeService>();
 builder.Services.AddScoped<PrintHistoryService>();
+builder.Services.AddScoped<DbfImportService>();
 
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
@@ -61,6 +62,26 @@ catch (Exception ex)
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     logger.LogError(ex, "Failed to initialize database at startup");
     throw;
+}
+
+// DBF auto-import
+try
+{
+    using var scope = app.Services.CreateScope();
+    var dbfService = scope.ServiceProvider.GetRequiredService<DbfImportService>();
+    var config = dbfService.LoadConfig();
+    if (!string.IsNullOrWhiteSpace(config.FilePath) && File.Exists(config.FilePath))
+    {
+        var (ins, upd, err) = await dbfService.ImportAsync(config);
+        if (err != null)
+            Console.WriteLine($"[DBF] Auto-import failed: {err}");
+        else
+            Console.WriteLine($"[DBF] Auto-import: {ins} inserted, {upd} updated");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[DBF] Unexpected error during auto-import: {ex.Message}");
 }
 
 app.UseCors("FrontendDev");

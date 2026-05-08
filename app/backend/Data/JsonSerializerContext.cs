@@ -12,6 +12,7 @@ namespace Backend.Data;
 [JsonSerializable(typeof(Produto))]
 [JsonSerializable(typeof(List<Produto>))]
 [JsonSerializable(typeof(List<int>))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(LayoutConfig))]
 [JsonSerializable(typeof(LayoutBuilderData))]
 [JsonSerializable(typeof(PageConfig))]
@@ -23,6 +24,7 @@ namespace Backend.Data;
 [JsonSerializable(typeof(MessageResponse))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, decimal>))]
+[JsonSerializable(typeof(DbfConfig))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }

@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="BarcodeLib" Version="3.1.5" />
+    <PackageReference Include="DbfDataReader" Version="0.4.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.18" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />

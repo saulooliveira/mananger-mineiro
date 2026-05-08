@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import ProdutosScreen from './components/ProdutosScreen';
 import LayoutBuilder from './components/LayoutBuilder';
 import HistoricoScreen from './components/HistoricoScreen';
+import ConfigImportacaoScreen from './components/ConfigImportacaoScreen';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         {currentScreen === 'produtos' && <ProdutosScreen />}
         {currentScreen === 'layout' && <LayoutBuilder />}
         {currentScreen === 'historico' && <HistoricoScreen />}
+        {currentScreen === 'importacao' && <ConfigImportacaoScreen />}
       </div>
     </div>
   );

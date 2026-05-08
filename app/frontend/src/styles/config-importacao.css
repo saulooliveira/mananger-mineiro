@@ -1,0 +1,242 @@
+.config-importacao-container {
+  padding: 20px;
+  max-width: 900px;
+}
+
+.config-section {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+}
+
+.config-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.file-select-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  margin: 12px 0;
+}
+
+.file-select-row input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #f9f9f9;
+}
+
+.file-select-row input:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.file-select-row button {
+  padding: 10px 16px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.file-select-row button:hover {
+  background: #0b7dda;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.file-select-row button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.mapping-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 12px 0;
+}
+
+@media (max-width: 768px) {
+  .mapping-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mapping-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mapping-field label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #555;
+}
+
+.mapping-field.required label::after {
+  content: " *";
+  color: #f44336;
+}
+
+.mapping-field select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.mapping-field select:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+
+.btn-save {
+  background: #2196F3;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #0b7dda;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-import {
+  background: #4CAF50;
+}
+
+.btn-import:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.button-group button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.import-result {
+  padding: 12px 16px;
+  background: #e8f5e9;
+  border: 1px solid #81c784;
+  border-radius: 8px;
+  color: #2e7d32;
+  font-weight: 500;
+  margin: 12px 0;
+}
+
+.import-result.error {
+  background: #ffebee;
+  border-color: #e57373;
+  color: #c62828;
+}
+
+.loading-text {
+  display: inline-block;
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #2196F3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.message-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  background: #323232;
+  color: white;
+  border-radius: 4px;
+  font-size: 13px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease-in-out;
+  max-width: 400px;
+}
+
+.message-toast.success {
+  background: #4CAF50;
+}
+
+.message-toast.error {
+  background: #f44336;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.empty-columns-message {
+  padding: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 13px;
+  margin: 8px 0;
+}

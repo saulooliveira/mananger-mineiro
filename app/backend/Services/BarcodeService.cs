@@ -70,11 +70,14 @@ public class BarcodeService
                 var filename = $"barcode_{Guid.NewGuid()}.png";
                 var filepath = Path.Combine(_tempDir, filename);
                 bitmap.Save(filepath, System.Drawing.Imaging.ImageFormat.Png);
+                Console.WriteLine($"[BarcodeService] Barcode salvo: {filepath}");
                 return filepath;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[BarcodeService] Erro ao gerar barcode: {ex.Message}");
+            Console.WriteLine($"[BarcodeService] Stack: {ex.StackTrace}");
             return "";
         }
     }

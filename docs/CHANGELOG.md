@@ -1,5 +1,84 @@
 # CHANGELOG
 
+## 2026-05-08 (Importação DBF Automática)
+
+- autor: Claude Code
+- arquivo: app/backend/backend.csproj
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado NuGet DbfDataReader v0.4.2 para leitura de arquivos DBF.
+
+- autor: Claude Code
+- arquivo: app/backend/Models/DbfConfig.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Modelo de configuração DBF com mapeamento de colunas (Codigo, Descricao, Categoria, Valor, Yield).
+
+- autor: Claude Code
+- arquivo: app/backend/Services/ProdutoService.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado método UpsertAsync para upsert de produtos por Codigo, preservando QuantidadeImpresa.
+
+- autor: Claude Code
+- arquivo: app/backend/Services/DbfImportService.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Serviço de importação DBF com LoadConfig, SaveConfig, GetFieldsAsync, ImportAsync. Suporta CP850/Latin-1, parse de valores decimal com fallback pt-BR.
+
+- autor: Claude Code
+- arquivo: app/backend/Controllers/DbfConfigController.cs
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Endpoints REST: GET/POST /api/dbf-config, GET /api/dbf-config/fields, POST /api/dbf-config/import. Config persistida em dbf-config.json.
+
+- autor: Claude Code
+- arquivo: app/backend/Data/JsonSerializerContext.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado DbfConfig e List<string> para source generation em builds com trimming.
+
+- autor: Claude Code
+- arquivo: app/backend/Program.cs
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Registrado DbfImportService e adicionado bloco auto-import entre EnsureCreated e app.Run(). Importa produtos ao iniciar se config existe.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/styles/config-importacao.css
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Estilos para tela de importação. Grade responsiva, selects, botões, toast de mensagens.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/ConfigImportacaoScreen.tsx
+- ação: criação
+- compilou: sim
+- testado: não
+- observação: Componente React de configuração DBF. Seletor de arquivo, carregamento de campos, mapeamento com dropdowns, botões salvar/importar com feedback.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/App.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado import e rota para ConfigImportacaoScreen. Renderiza quando currentScreen === 'importacao'.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/Sidebar.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado botão "📥 Importação" na navegação entre "Histórico" e "Layout".
+
 ## 2026-05-07 (Layout Auto-Load e Padronização)
 
 - autor: Claude Code
