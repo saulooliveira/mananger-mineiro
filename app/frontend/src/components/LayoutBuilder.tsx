@@ -10,9 +10,11 @@ import {
   DEFAULT_LAYOUT,
   AVAILABLE_FIELDS,
 } from '../types/LayoutTypes';
-import { getProdutos, Produto } from '../services/produtosApi';
+import { getProdutos } from '../services/produtosApi';
 import PdfModal from './PdfModal';
 import '../styles/layout-builder.css';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5274/api';
 
 const LayoutBuilder: React.FC = () => {
   const [layout, setLayout] = useState<LayoutData>(DEFAULT_LAYOUT);
@@ -165,6 +167,11 @@ const LayoutBuilder: React.FC = () => {
     setDraggingId(null);
   };
 
+  // Load layout on mount
+  React.useEffect(() => {
+    loadLayout();
+  }, []);
+
   // Cleanup URL on unmount
   React.useEffect(() => {
     return () => {
@@ -201,7 +208,7 @@ const LayoutBuilder: React.FC = () => {
       };
       console.log('Preview payload:', JSON.stringify(payload, null, 2));
 
-      const response = await fetch('http://localhost:5274/api/print/builder-preview', {
+      const response = await fetch(`${API_BASE_URL}/print/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -252,7 +259,7 @@ const LayoutBuilder: React.FC = () => {
   // Salvar layout
   const saveLayout = async () => {
     try {
-      const response = await fetch('http://localhost:5274/api/layout-builder', {
+      const response = await fetch(`${API_BASE_URL}/layout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(layout),
@@ -271,7 +278,7 @@ const LayoutBuilder: React.FC = () => {
   // Carregar layout
   const loadLayout = async () => {
     try {
-      const response = await fetch('http://localhost:5274/api/layout-builder');
+      const response = await fetch(`${API_BASE_URL}/layout`);
       if (response.ok) {
         const data = await response.json();
         setLayout(data);

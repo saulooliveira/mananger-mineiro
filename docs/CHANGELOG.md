@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-05-07 (Layout Auto-Load e Padronização)
+
+- autor: Claude Code
+- arquivo: app/frontend/src/components/LayoutBuilder.tsx
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Adicionado useEffect para carregar layout automaticamente ao montar componente. Layout persiste e carrega ao abrir tela.
+
+- autor: Claude Code
+- arquivo: app/frontend/src/styles/layout-builder.css
+- ação: alteração
+- compilou: sim
+- testado: não
+- observação: Padronizados botões (.btn-add, .btn-remove, .btn-save, .btn-load, .btn-print) com cores e estilos uniformes. Todos usam azul #2196F3 com hover padrão.
+
 ## 2026-05-05 (Layout Positioning Fix)
 
 - autor: Claude Code

@@ -86,7 +86,8 @@
 .btn-add,
 .btn-remove,
 .btn-save,
-.btn-load {
+.btn-load,
+.btn-print {
   width: 100%;
   padding: 10px;
   margin-bottom: 8px;
@@ -97,53 +98,67 @@
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
-}
-
-.btn-add {
-  background: #4CAF50;
   color: white;
 }
 
+.btn-add {
+  background: #2196F3;
+}
+
 .btn-add:hover {
-  background: #45a049;
+  background: #0b7dda;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .btn-remove {
   background: #f44336;
-  color: white;
 }
 
 .btn-remove:hover {
   background: #da190b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .btn-save {
   background: #2196F3;
-  color: white;
 }
 
 .btn-save:hover {
   background: #0b7dda;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .btn-load {
-  background: #FF9800;
-  color: white;
+  background: #2196F3;
 }
 
 .btn-load:hover {
-  background: #e68900;
+  background: #0b7dda;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .btn-print {
-  background: #9C27B0;
-  color: white;
+  background: #2196F3;
 }
 
 .btn-print:hover {
-  background: #7b1fa2;
+  background: #0b7dda;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-add:disabled,
+.btn-remove:disabled,
+.btn-save:disabled,
+.btn-load:disabled,
+.btn-print:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .builder-canvas {

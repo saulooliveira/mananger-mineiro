@@ -10,17 +10,21 @@ namespace Backend.Services;
 
 public class PrintService
 {
+    private const string UnifiedLayoutFileName = "layout.json";
+    private const string LegacyBuilderLayoutFileName = "layout-builder-config.json";
+
     private readonly BarcodeService _barcodeService;
+    private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
 
     public PrintService(BarcodeService barcodeService)
     {
         _barcodeService = barcodeService;
     }
 
-    public byte[] GeneratePreviewPdf(List<Produto> produtos, LayoutConfig? requestConfig = null)
+    public byte[] GeneratePreviewPdf(List<Produto> produtos, object? layoutData = null)
     {
-        var layoutConfig = requestConfig ?? LoadLayoutConfig();
-        var document = new LayoutBasedDocument(produtos, layoutConfig);
+        var layout = ResolveLayout(layoutData);
+        var document = new BuilderBasedDocument(produtos, layout, _barcodeService);
 
         using var stream = new MemoryStream();
         document.GeneratePdf(stream);
@@ -29,62 +33,128 @@ public class PrintService
 
     public byte[] GenerateBuilderPdf(List<Produto> produtos, object? layoutData = null)
     {
-        LayoutBuilderData layout;
-
-        if (layoutData == null)
-        {
-            layout = LoadBuilderLayout();
-            System.Diagnostics.Debug.WriteLine("[PrintService] Using default layout (no data received)");
-        }
-        else if (layoutData is LayoutBuilderData lbd)
-        {
-            layout = lbd;
-            System.Diagnostics.Debug.WriteLine($"[PrintService] Using LayoutBuilderData directly. Elements: {lbd.Elements.Count}");
-        }
-        else if (layoutData is System.Text.Json.JsonElement je)
-        {
-            var json = je.GetRawText();
-            System.Diagnostics.Debug.WriteLine($"[PrintService] Received JsonElement: {json}");
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            layout = JsonSerializer.Deserialize<LayoutBuilderData>(json, options) ?? LoadBuilderLayout();
-            System.Diagnostics.Debug.WriteLine($"[PrintService] Deserialized layout. Elements: {layout.Elements.Count}. Page: {layout.Page.Columns}x{layout.Page.Rows}");
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine($"[PrintService] Unknown layout data type: {layoutData?.GetType().Name}. Using default.");
-            layout = LoadBuilderLayout();
-        }
-
-        var document = new BuilderBasedDocument(produtos, layout, _barcodeService);
-
-        using var stream = new MemoryStream();
-        document.GeneratePdf(stream);
-        return stream.ToArray();
+        return GeneratePreviewPdf(produtos, layoutData);
     }
 
-    private LayoutBuilderData LoadBuilderLayout()
+    private LayoutBuilderData ResolveLayout(object? layoutData)
     {
-        var configPath = Path.Combine(AppContext.BaseDirectory, "layout-builder-config.json");
-
-        if (!File.Exists(configPath))
+        if (layoutData == null)
         {
-            return GetDefaultBuilderLayout();
+            return LoadLayoutFromDisk();
         }
+
+        if (layoutData is LayoutBuilderData layoutBuilder)
+        {
+            return SanitizeLayout(layoutBuilder);
+        }
+
+        if (layoutData is LayoutConfig legacyLayoutConfig)
+        {
+            return ConvertLegacyLayout(legacyLayoutConfig);
+        }
+
+        if (layoutData is JsonElement jsonElement)
+        {
+            if (jsonElement.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            {
+                return LoadLayoutFromDisk();
+            }
+
+            if (jsonElement.TryGetProperty("layoutConfig", out var legacyLayoutConfigElement))
+            {
+                var legacy = legacyLayoutConfigElement.Deserialize<LayoutConfig>(_jsonOptions);
+                if (legacy != null)
+                {
+                    return ConvertLegacyLayout(legacy);
+                }
+            }
+
+            var parsedLayout = jsonElement.Deserialize<LayoutBuilderData>(_jsonOptions);
+            if (parsedLayout != null)
+            {
+                return SanitizeLayout(parsedLayout);
+            }
+        }
+
+        return LoadLayoutFromDisk();
+    }
+
+    private LayoutBuilderData LoadLayoutFromDisk()
+    {
+        var unifiedPath = Path.Combine(AppContext.BaseDirectory, UnifiedLayoutFileName);
+        if (TryReadLayout(unifiedPath, out var unifiedLayout))
+        {
+            return unifiedLayout;
+        }
+
+        var legacyBuilderPath = Path.Combine(AppContext.BaseDirectory, LegacyBuilderLayoutFileName);
+        if (TryReadLayout(legacyBuilderPath, out var legacyBuilderLayout))
+        {
+            TryWriteLayout(unifiedPath, legacyBuilderLayout);
+            return legacyBuilderLayout;
+        }
+
+        var fallback = GetDefaultBuilderLayout();
+        TryWriteLayout(unifiedPath, fallback);
+        return fallback;
+    }
+
+    private bool TryReadLayout(string path, out LayoutBuilderData layout)
+    {
+        layout = GetDefaultBuilderLayout();
 
         try
         {
-            var json = File.ReadAllText(configPath);
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var config = JsonSerializer.Deserialize<LayoutBuilderData>(json, options);
-            return config ?? GetDefaultBuilderLayout();
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            var json = File.ReadAllText(path);
+            var parsed = JsonSerializer.Deserialize<LayoutBuilderData>(json, _jsonOptions);
+            if (parsed == null)
+            {
+                return false;
+            }
+
+            layout = SanitizeLayout(parsed);
+            return true;
         }
         catch
         {
-            return GetDefaultBuilderLayout();
+            return false;
         }
     }
 
-    private LayoutBuilderData GetDefaultBuilderLayout()
+    private void TryWriteLayout(string path, LayoutBuilderData layout)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(layout, _jsonOptions);
+            File.WriteAllText(path, json);
+        }
+        catch
+        {
+            // Best-effort write. Failing to persist should not block PDF generation.
+        }
+    }
+
+    private static LayoutBuilderData SanitizeLayout(LayoutBuilderData layout)
+    {
+        layout.Page ??= new PageConfig();
+        layout.Elements ??= new List<LayoutBuilderElement>();
+
+        layout.Page.MarginMm = Math.Max(0, layout.Page.MarginMm);
+        layout.Page.Columns = Math.Max(1, layout.Page.Columns);
+        layout.Page.Rows = Math.Max(1, layout.Page.Rows);
+        layout.Page.GapMm = Math.Max(0, layout.Page.GapMm);
+        layout.Page.CardWidthMm = Math.Max(1, layout.Page.CardWidthMm);
+        layout.Page.CardHeightMm = Math.Max(1, layout.Page.CardHeightMm);
+
+        return layout;
+    }
+
+    private static LayoutBuilderData GetDefaultBuilderLayout()
     {
         return new LayoutBuilderData
         {
@@ -101,216 +171,73 @@ public class PrintService
         };
     }
 
-    private LayoutConfig LoadLayoutConfig()
+    private static LayoutBuilderData ConvertLegacyLayout(LayoutConfig legacyConfig)
     {
-        var configPath = Path.Combine(AppContext.BaseDirectory, "layout-config.json");
-
-        if (!File.Exists(configPath))
+        var defaultLayout = GetDefaultBuilderLayout();
+        if (legacyConfig.Cards == null || legacyConfig.Cards.Count == 0)
         {
-            return GetDefaultConfig();
+            return defaultLayout;
         }
 
-        try
-        {
-            var json = File.ReadAllText(configPath);
-            var config = JsonSerializer.Deserialize<LayoutConfig>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return config ?? GetDefaultConfig();
-        }
-        catch
-        {
-            return GetDefaultConfig();
-        }
-    }
+        var firstCard = legacyConfig.Cards[0];
+        var cardWidth = firstCard.W > 0 ? firstCard.W : defaultLayout.Page.CardWidthMm;
+        var cardHeight = firstCard.H > 0 ? firstCard.H : defaultLayout.Page.CardHeightMm;
 
-    private LayoutConfig GetDefaultConfig()
-    {
-        return new LayoutConfig
+        var converted = new LayoutBuilderData
         {
-            Cards = new List<Card>
+            Page = new PageConfig
             {
-                new Card
-                {
-                    Id = "default",
-                    X = 10,
-                    Y = 10,
-                    W = 92.5,
-                    H = 136,
-                    Content = new Dictionary<string, Element>
-                    {
-                        { "title", new Element { X = 5, Y = 15, Text = "", FontSize = 16, Bold = true, Alignment = "left", Color = "#000", Visible = true } },
-                        { "subtitle", new Element { X = 5, Y = 30, Text = "", FontSize = 12, Bold = false, Alignment = "left", Color = "#666", Visible = true } },
-                        { "price", new Element { X = 5, Y = 60, Text = "", FontSize = 20, Bold = true, Alignment = "left", Color = "#000", Visible = true } },
-                        { "unit", new Element { X = 70, Y = 63, Text = "KG", FontSize = 10, Bold = false, Alignment = "left", Color = "#666", Visible = true } },
-                        { "footer", new Element { X = 5, Y = 115, Text = "", FontSize = 8, Bold = false, Alignment = "left", Color = "#999", Visible = true } }
-                    }
-                }
-            }
+                MarginMm = Math.Max(0, legacyConfig.PageMargin),
+                Columns = Math.Max(1, legacyConfig.GridColumns),
+                Rows = Math.Max(1, legacyConfig.GridRows),
+                GapMm = Math.Max(0, legacyConfig.GridGapMm),
+                CardWidthMm = cardWidth,
+                CardHeightMm = cardHeight,
+            },
+            Elements = new List<LayoutBuilderElement>(),
         };
-    }
-}
 
-internal class LayoutBasedDocument : IDocument
-{
-    private readonly List<Produto> _produtos;
-    private readonly LayoutConfig _config;
+        var content = firstCard.Content ?? new Dictionary<string, Element>();
 
-    public LayoutBasedDocument(List<Produto> produtos, LayoutConfig config)
-    {
-        _produtos = produtos;
-        _config = config;
-    }
+        if (content.TryGetValue("title", out var title) && title.Visible)
+            converted.Elements.Add(ToTextElement("title", title, cardWidth, "field", "codigo"));
 
-    public DocumentMetadata GetMetadata()
-    {
-        return DocumentMetadata.Default;
-    }
+        if (content.TryGetValue("subtitle", out var subtitle) && subtitle.Visible)
+            converted.Elements.Add(ToTextElement("subtitle", subtitle, cardWidth, "field", "descricao"));
 
-    public void Compose(IDocumentContainer container)
-    {
-        var itemsPerPage = 4;
-        var productGroups = _produtos
-            .Select((produto, index) => new { produto, index })
-            .GroupBy(x => x.index / itemsPerPage)
-            .ToList();
+        if (content.TryGetValue("price", out var price) && price.Visible)
+            converted.Elements.Add(ToTextElement("price", price, cardWidth, "field", "valor"));
 
-        container.Page(page =>
-        {
-            page.Size(PageSizes.A4);
-            page.Margin(0);
-            page.DefaultTextStyle(x => x.FontSize(10).FontColor(Colors.Black));
+        if (content.TryGetValue("unit", out var unit) && unit.Visible)
+            converted.Elements.Add(ToTextElement("unit", unit, cardWidth, "fixed", null));
 
-            page.Content().Column(pageColumn =>
-            {
-                for (var groupIndex = 0; groupIndex < productGroups.Count; groupIndex++)
-                {
-                    var pageGroup = productGroups[groupIndex].ToList();
+        if (content.TryGetValue("footer", out var footer) && footer.Visible)
+            converted.Elements.Add(ToTextElement("footer", footer, cardWidth, "field", "yield"));
 
-                    pageColumn.Item().Column(gridColumn =>
-                    {
-                        for (int row = 0; row < 2; row++)
-                        {
-                            gridColumn.Item().Height(148.5f, Unit.Millimetre).Row(gridRow =>
-                            {
-                                for (int col = 0; col < 2; col++)
-                                {
-                                    var itemIndex = row * 2 + col;
-                                    if (itemIndex < pageGroup.Count)
-                                    {
-                                        var item = pageGroup[itemIndex];
-                                        var cardTemplate = _config.Cards[itemIndex % _config.Cards.Count];
-
-                                        gridRow.RelativeItem()
-                                            .Column(cardContent =>
-                                            {
-                                                RenderProductCard(cardContent, item.produto, cardTemplate.Content);
-                                            });
-                                    }
-                                    else
-                                    {
-                                        gridRow.RelativeItem();
-                                    }
-                                }
-                            });
-                        }
-                    });
-
-                    if (groupIndex < productGroups.Count - 1)
-                    {
-                        pageColumn.Item().PageBreak();
-                    }
-                }
-            });
-        });
+        return SanitizeLayout(converted);
     }
 
-    private void RenderProductCard(ColumnDescriptor card, Produto produto, Dictionary<string, Element> template)
+    private static LayoutBuilderElement ToTextElement(string id, Element source, double cardWidth, string sourceType, string? fieldName)
     {
-        if (template.TryGetValue("title", out var title) && title.Visible)
+        var width = Math.Max(10, cardWidth - source.X - 2);
+        var estimatedHeight = Math.Max(6, source.FontSize * 0.7);
+
+        return new LayoutBuilderElement
         {
-            RenderElement(card, produto.Codigo, title, 0);
-        }
-
-        if (template.TryGetValue("subtitle", out var subtitle) && subtitle.Visible)
-        {
-            RenderElement(card, produto.Descricao, subtitle, (float)subtitle.Y);
-        }
-
-        if (template.TryGetValue("price", out var price) && price.Visible)
-        {
-            RenderElement(card, $"R$ {produto.Valor:N2}", price, (float)price.Y);
-        }
-
-        if (template.TryGetValue("unit", out var unit) && unit.Visible && !string.IsNullOrWhiteSpace(unit.Text))
-        {
-            RenderElement(card, unit.Text, unit, (float)unit.Y);
-        }
-
-        if (template.TryGetValue("footer", out var footer) && footer.Visible)
-        {
-            if (!string.IsNullOrWhiteSpace(produto.Yield))
-            {
-                RenderElement(card, $"Yield: {produto.Yield}", footer, (float)footer.Y);
-            }
-
-            RenderElement(card, $"Impressões: {produto.QuantidadeImpresa}", footer, (float)(footer.Y + 10));
-        }
-    }
-
-    private void RenderElement(ColumnDescriptor card, string text, Element element, float previousY)
-    {
-        if (!element.Visible) return;
-
-        var spacing = (float)element.Y - previousY;
-        if (spacing > 0)
-        {
-            card.Item().Height(spacing, Unit.Millimetre);
-        }
-
-        if (!string.IsNullOrWhiteSpace(element.ImagePath))
-        {
-            RenderImage(card, element);
-        }
-        else if (!string.IsNullOrWhiteSpace(text))
-        {
-            var textElement = card.Item().PaddingLeft((float)element.X, Unit.Millimetre).Text(text)
-                .FontSize(element.FontSize)
-                .FontColor(ParseColor(element.Color));
-
-            if (element.Alignment == "center")
-                textElement.AlignCenter();
-            else if (element.Alignment == "right")
-                textElement.AlignRight();
-
-            if (element.Bold) textElement.SemiBold();
-        }
-    }
-
-    private void RenderImage(ColumnDescriptor card, Element element)
-    {
-        var imagePath = element.ImagePath;
-        if (!imagePath.StartsWith("/"))
-        {
-            imagePath = "/" + imagePath;
-        }
-
-        var fullPath = Path.Combine(AppContext.BaseDirectory, imagePath.TrimStart('/'));
-
-        if (File.Exists(fullPath))
-        {
-            card.Item().PaddingLeft((float)element.X, Unit.Millimetre).MaxWidth(50, Unit.Millimetre).Image(fullPath);
-        }
-    }
-
-    private Color ParseColor(string colorHex)
-    {
-        try
-        {
-            return Color.FromHex(colorHex);
-        }
-        catch
-        {
-            return Colors.Black;
-        }
+            Id = id,
+            Type = "text",
+            Source = sourceType,
+            FieldName = fieldName,
+            PreviewText = source.Text,
+            XMm = source.X,
+            YMm = source.Y,
+            WidthMm = width,
+            HeightMm = estimatedHeight,
+            FontSize = source.FontSize,
+            Bold = source.Bold,
+            Align = source.Alignment,
+            Color = source.Color,
+        };
     }
 }
 
@@ -337,6 +264,10 @@ internal class BuilderBasedDocument : IDocument
             .GroupBy(x => x.index / itemsPerPage)
             .ToList();
 
+        var cardWidthMm = (float)_layout.Page.CardWidthMm;
+        var cardHeightMm = (float)_layout.Page.CardHeightMm;
+        var gapMm = (float)_layout.Page.GapMm;
+
         container.Page(page =>
         {
             page.Size(PageSizes.A4);
@@ -345,40 +276,41 @@ internal class BuilderBasedDocument : IDocument
 
             page.Content().Column(pageColumn =>
             {
-                for (int groupIndex = 0; groupIndex < productGroups.Count; groupIndex++)
+                for (var groupIndex = 0; groupIndex < productGroups.Count; groupIndex++)
                 {
                     var pageGroup = productGroups[groupIndex].ToList();
 
                     pageColumn.Item().Column(gridColumn =>
                     {
-                        for (int row = 0; row < _layout.Page.Rows; row++)
+                        for (var row = 0; row < _layout.Page.Rows; row++)
                         {
-                            gridColumn.Item().Height((float)_layout.Page.CardHeightMm, Unit.Millimetre).Row(gridRow =>
+                            gridColumn.Item().Height(cardHeightMm, Unit.Millimetre).Row(gridRow =>
                             {
-                                for (int col = 0; col < _layout.Page.Columns; col++)
+                                for (var col = 0; col < _layout.Page.Columns; col++)
                                 {
+                                    if (col > 0 && gapMm > 0)
+                                    {
+                                        gridRow.ConstantItem(gapMm, Unit.Millimetre);
+                                    }
+
                                     var itemIndex = row * _layout.Page.Columns + col;
                                     if (itemIndex < pageGroup.Count)
                                     {
                                         var produto = pageGroup[itemIndex].produto;
-                                        gridRow.RelativeItem()
-                                            .Width((float)_layout.Page.CardWidthMm, Unit.Millimetre)
-                                            .Height((float)_layout.Page.CardHeightMm, Unit.Millimetre)
-                                            .Column(cardContent =>
-                                            {
-                                                RenderCard(cardContent, produto);
-                                            });
+                                        gridRow.ConstantItem(cardWidthMm, Unit.Millimetre)
+                                            .Height(cardHeightMm, Unit.Millimetre)
+                                            .Element(card => RenderCard(card, produto));
                                     }
                                     else
                                     {
-                                        gridRow.RelativeItem();
+                                        gridRow.ConstantItem(cardWidthMm, Unit.Millimetre);
                                     }
                                 }
                             });
 
-                            if (row < _layout.Page.Rows - 1)
+                            if (row < _layout.Page.Rows - 1 && gapMm > 0)
                             {
-                                gridColumn.Item().Height((float)_layout.Page.GapMm, Unit.Millimetre);
+                                gridColumn.Item().Height(gapMm, Unit.Millimetre);
                             }
                         }
                     });
@@ -392,96 +324,83 @@ internal class BuilderBasedDocument : IDocument
         });
     }
 
-    private void RenderCard(ColumnDescriptor card, Produto produto)
+    private void RenderCard(IContainer card, Produto produto)
     {
-        var sortedElements = _layout.Elements.OrderBy(e => e.YMm).ThenBy(e => e.XMm).ToList();
-        var currentY = 0f;
-
-        foreach (var element in sortedElements)
+        card.Layers(layers =>
         {
-            var x = (float)element.XMm;
-            var y = (float)element.YMm;
-            var w = (float)element.WidthMm;
-            var h = (float)element.HeightMm;
+            layers.PrimaryLayer().Extend();
 
-            // Add spacing to reach absolute Y position
-            if (y > currentY)
+            foreach (var element in _layout.Elements)
             {
-                var spacing = y - currentY;
-                card.Item().Height(spacing, Unit.Millimetre);
-                currentY = y;
+                layers.Layer()
+                    .TranslateX((float)element.XMm, Unit.Millimetre)
+                    .TranslateY((float)element.YMm, Unit.Millimetre)
+                    .Width((float)element.WidthMm, Unit.Millimetre)
+                    .Height((float)element.HeightMm, Unit.Millimetre)
+                    .Element(container => RenderElement(container, element, produto));
+            }
+        });
+    }
+
+    private void RenderElement(IContainer container, LayoutBuilderElement element, Produto produto)
+    {
+        if (element.Type == "qrcode")
+        {
+            var value = GetElementText(element, produto);
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            var imagePath = _barcodeService.GenerateQRCode(value);
+            if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+            {
+                container.Image(imagePath).FitArea();
             }
 
-            if (element.Type == "qrcode")
-            {
-                var value = GetElementText(element, produto);
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    var imagePath = _barcodeService.GenerateQRCode(value);
-                    if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
-                    {
-                        card.Item()
-                            .PaddingLeft(x, Unit.Millimetre)
-                            .Width(w, Unit.Millimetre)
-                            .Height(h, Unit.Millimetre)
-                            .Image(imagePath);
-                    }
-                }
-            }
-            else if (element.Type == "barcode")
-            {
-                var value = GetElementText(element, produto);
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    var barcodeType = element.BarcodeType ?? "ean13";
-                    var imagePath = _barcodeService.GenerateBarcode(value, barcodeType);
-                    if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
-                    {
-                        card.Item()
-                            .PaddingLeft(x, Unit.Millimetre)
-                            .Width(w, Unit.Millimetre)
-                            .Height(h, Unit.Millimetre)
-                            .Image(imagePath);
-                    }
-                }
-            }
-            else if (element.Type == "text" || element.Type == "formula")
-            {
-                var text = GetElementText(element, produto);
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    var textElement = card.Item()
-                        .PaddingLeft(x, Unit.Millimetre)
-                        .Width(w, Unit.Millimetre)
-                        .Height(h, Unit.Millimetre)
-                        .Text(text)
-                        .FontSize(element.FontSize)
-                        .FontColor(ParseColor(element.Color ?? "#000000"));
-
-                    if (element.Align == "center")
-                        textElement.AlignCenter();
-                    else if (element.Align == "right")
-                        textElement.AlignRight();
-
-                    if (element.Bold)
-                        textElement.SemiBold();
-                }
-            }
-            else if (element.Type == "image" && !string.IsNullOrWhiteSpace(element.ImagePath))
-            {
-                var fullPath = Path.Combine(AppContext.BaseDirectory, element.ImagePath.TrimStart('/'));
-                if (File.Exists(fullPath))
-                {
-                    card.Item()
-                        .PaddingLeft(x, Unit.Millimetre)
-                        .Width(w, Unit.Millimetre)
-                        .Height(h, Unit.Millimetre)
-                        .Image(fullPath);
-                }
-            }
-
-            currentY = y + h;
+            return;
         }
+
+        if (element.Type == "barcode")
+        {
+            var value = GetElementText(element, produto);
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            var barcodeType = element.BarcodeType ?? "ean13";
+            var imagePath = _barcodeService.GenerateBarcode(value, barcodeType);
+            if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+            {
+                container.Image(imagePath).FitArea();
+            }
+
+            return;
+        }
+
+        if (element.Type == "image" && !string.IsNullOrWhiteSpace(element.ImagePath))
+        {
+            var fullPath = Path.Combine(AppContext.BaseDirectory, element.ImagePath.TrimStart('/'));
+            if (File.Exists(fullPath))
+            {
+                container.Image(fullPath).FitArea();
+            }
+
+            return;
+        }
+
+        var text = GetElementText(element, produto);
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        var textElement = container.Text(text)
+            .FontSize(element.FontSize)
+            .FontColor(ParseColor(element.Color ?? "#000000"));
+
+        if (element.Align == "center")
+            textElement.AlignCenter();
+        else if (element.Align == "right")
+            textElement.AlignRight();
+
+        if (element.Bold)
+            textElement.SemiBold();
     }
 
     private string GetElementText(LayoutBuilderElement element, Produto produto)
@@ -492,6 +411,7 @@ internal class BuilderBasedDocument : IDocument
             {
                 "fixed" => element.PreviewText ?? "",
                 "field" => GetFieldValue(element.FieldName, produto),
+                "formula" => EvaluateFormula(element.Formula ?? "", produto),
                 _ => "",
             },
             "formula" => EvaluateFormula(element.Formula ?? "", produto),
@@ -499,12 +419,14 @@ internal class BuilderBasedDocument : IDocument
             {
                 "fixed" => element.Value ?? "",
                 "field" => GetFieldValue(element.FieldName, produto),
+                "formula" => EvaluateFormula(element.Formula ?? "", produto),
                 _ => "",
             },
             "barcode" => element.Source switch
             {
                 "fixed" => element.Value ?? "",
                 "field" => GetFieldValue(element.FieldName, produto),
+                "formula" => EvaluateFormula(element.Formula ?? "", produto),
                 _ => "",
             },
             _ => "",
@@ -517,6 +439,7 @@ internal class BuilderBasedDocument : IDocument
         {
             "descricao" => produto.Descricao,
             "codigo" => produto.Codigo,
+            "codigo_barras" => produto.Codigo,
             "categoria" => produto.Categoria ?? "",
             "valor" => $"R$ {produto.Valor:N2}",
             "yield" => produto.Yield ?? "",
@@ -534,7 +457,8 @@ internal class BuilderBasedDocument : IDocument
                 .Replace("descricao", $"\"{produto.Descricao}\"")
                 .Replace("codigo", $"\"{produto.Codigo}\"")
                 .Replace("categoria", $"\"{produto.Categoria}\"")
-                .Replace("yield", $"\"{produto.Yield}\"");
+                .Replace("yield", $"\"{produto.Yield}\"")
+                .Replace("quantidadeimpresa", $"\"{produto.QuantidadeImpresa}\"");
 
             return result.Replace("\"", "");
         }

@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Backend.Controllers;
 
@@ -34,7 +35,8 @@ public class PrintController : ControllerBase
             return NotFound(new ErrorResponse { Error = "Nenhum produto encontrado para os IDs informados." });
         }
 
-        var pdfBytes = _printService.GeneratePreviewPdf(produtos, request.LayoutConfig);
+        object? layoutPayload = request.Layout is not null ? request.Layout : request.LayoutConfig;
+        var pdfBytes = _printService.GeneratePreviewPdf(produtos, layoutPayload);
         return File(pdfBytes, "application/pdf", "preview.pdf");
     }
 
@@ -50,9 +52,11 @@ public class PrintController : ControllerBase
         var req = request.Value;
         System.Diagnostics.Debug.WriteLine($"[PrintController] BuilderPreview request: {req.GetRawText()}");
 
-        var produtoIds = req.GetProperty("produtoIds").EnumerateArray()
-            .Select(x => x.GetInt32())
-            .ToList();
+        var requestModel = req.Deserialize<PrintPreviewRequest>(new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        var produtoIds = requestModel?.ProdutoIds ?? new List<int>();
 
         if (!produtoIds.Any())
         {
@@ -65,19 +69,9 @@ public class PrintController : ControllerBase
             return NotFound(new ErrorResponse { Error = "Nenhum produto encontrado para os IDs informados." });
         }
 
-        object? layout = null;
-        if (req.TryGetProperty("layout", out var layoutProp))
-        {
-            layout = layoutProp;
-            System.Diagnostics.Debug.WriteLine($"[PrintController] Layout property found: {layoutProp.GetRawText()}");
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine("[PrintController] Layout property NOT found in request");
-        }
-
-        var pdfBytes = _printService.GenerateBuilderPdf(produtos, layout);
-        return File(pdfBytes, "application/pdf", "builder-preview.pdf");
+        object? layoutPayload = requestModel?.Layout is not null ? requestModel.Layout : requestModel?.LayoutConfig;
+        var pdfBytes = _printService.GenerateBuilderPdf(produtos, layoutPayload);
+        return File(pdfBytes, "application/pdf", "preview.pdf");
     }
 
     [HttpPost("confirm")]
@@ -104,6 +98,7 @@ public class PrintPreviewRequest
 {
     public List<int> ProdutoIds { get; set; } = new();
     public Dictionary<string, decimal> EditedPrices { get; set; } = new();
+    public Backend.Data.LayoutBuilderData? Layout { get; set; }
     public Backend.Data.LayoutConfig? LayoutConfig { get; set; }
 }
 

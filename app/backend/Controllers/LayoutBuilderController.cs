@@ -4,10 +4,13 @@ using System.Text.Json;
 namespace Backend.Controllers;
 
 [ApiController]
+[Route("api/layout")]
 [Route("api/layout-builder")]
+[Route("api/layout-config")]
 public class LayoutBuilderController : ControllerBase
 {
-    private readonly string _configPath = Path.Combine(AppContext.BaseDirectory, "layout-builder-config.json");
+    private readonly string _configPath = Path.Combine(AppContext.BaseDirectory, "layout.json");
+    private readonly string _legacyConfigPath = Path.Combine(AppContext.BaseDirectory, "layout-builder-config.json");
     private readonly object _configLock = new();
 
     [HttpGet]
@@ -17,6 +20,8 @@ public class LayoutBuilderController : ControllerBase
         {
             lock (_configLock)
             {
+                MigrateLegacyFileIfNeeded();
+
                 if (!System.IO.File.Exists(_configPath))
                 {
                     return Ok(GetDefaultLayout());
@@ -67,5 +72,20 @@ public class LayoutBuilderController : ControllerBase
             },
             elements = new object[] { },
         };
+    }
+
+    private void MigrateLegacyFileIfNeeded()
+    {
+        if (System.IO.File.Exists(_configPath))
+        {
+            return;
+        }
+
+        if (!System.IO.File.Exists(_legacyConfigPath))
+        {
+            return;
+        }
+
+        System.IO.File.Copy(_legacyConfigPath, _configPath, overwrite: false);
     }
 }
