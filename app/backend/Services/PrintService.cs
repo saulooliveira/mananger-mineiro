@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using Backend.Data;
 using Backend.Models;
+using Microsoft.Extensions.Logging;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -14,17 +15,19 @@ public class PrintService
     private const string LegacyBuilderLayoutFileName = "layout-builder-config.json";
 
     private readonly BarcodeService _barcodeService;
+    private readonly ILogger<PrintService> _logger;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
 
-    public PrintService(BarcodeService barcodeService)
+    public PrintService(BarcodeService barcodeService, ILogger<PrintService> logger)
     {
         _barcodeService = barcodeService;
+        _logger = logger;
     }
 
     public byte[] GeneratePreviewPdf(List<Produto> produtos, object? layoutData = null)
     {
         var layout = ResolveLayout(layoutData);
-        var document = new BuilderBasedDocument(produtos, layout, _barcodeService);
+        var document = new BuilderBasedDocument(produtos, layout, _barcodeService, _logger);
 
         using var stream = new MemoryStream();
         document.GeneratePdf(stream);
@@ -38,23 +41,30 @@ public class PrintService
 
     private LayoutBuilderData ResolveLayout(object? layoutData)
     {
+        _logger.LogInformation("[PrintService] ResolveLayout called with layoutData type: {Type}", layoutData?.GetType().Name ?? "null");
+
         if (layoutData == null)
         {
+            _logger.LogInformation("[PrintService] layoutData is null, loading from disk");
             return LoadLayoutFromDisk();
         }
 
         if (layoutData is LayoutBuilderData layoutBuilder)
         {
+            _logger.LogInformation("[PrintService] layoutData is LayoutBuilderData with {ElementCount} elements", layoutBuilder.Elements?.Count ?? 0);
             return SanitizeLayout(layoutBuilder);
         }
 
         if (layoutData is LayoutConfig legacyLayoutConfig)
         {
+            _logger.LogInformation("[PrintService] layoutData is LayoutConfig");
             return ConvertLegacyLayout(legacyLayoutConfig);
         }
 
         if (layoutData is JsonElement jsonElement)
         {
+            _logger.LogInformation("[PrintService] layoutData is JsonElement, kind: {Kind}", jsonElement.ValueKind);
+
             if (jsonElement.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
             {
                 return LoadLayoutFromDisk();
@@ -70,12 +80,14 @@ public class PrintService
             }
 
             var parsedLayout = jsonElement.Deserialize<LayoutBuilderData>(_jsonOptions);
+            _logger.LogInformation("[PrintService] JsonElement deserialized to LayoutBuilderData with {ElementCount} elements", parsedLayout?.Elements?.Count ?? -1);
             if (parsedLayout != null)
             {
                 return SanitizeLayout(parsedLayout);
             }
         }
 
+        _logger.LogWarning("[PrintService] Could not resolve layout, loading from disk");
         return LoadLayoutFromDisk();
     }
 
@@ -246,12 +258,14 @@ internal class BuilderBasedDocument : IDocument
     private readonly List<Produto> _produtos;
     private readonly LayoutBuilderData _layout;
     private readonly BarcodeService _barcodeService;
+    private readonly ILogger<PrintService> _logger;
 
-    public BuilderBasedDocument(List<Produto> produtos, LayoutBuilderData layout, BarcodeService barcodeService)
+    public BuilderBasedDocument(List<Produto> produtos, LayoutBuilderData layout, BarcodeService barcodeService, ILogger<PrintService> logger)
     {
         _produtos = produtos;
         _layout = layout;
         _barcodeService = barcodeService;
+        _logger = logger;
     }
 
     public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
@@ -326,12 +340,14 @@ internal class BuilderBasedDocument : IDocument
 
     private void RenderCard(IContainer card, Produto produto)
     {
+        _logger.LogInformation("[PrintService] RenderCard called for product: {ProdutoId}, total elements: {ElementCount}", produto.Id, _layout.Elements.Count);
         card.Layers(layers =>
         {
             layers.PrimaryLayer().Extend();
 
             foreach (var element in _layout.Elements)
             {
+                _logger.LogInformation("[PrintService] Processing element: {ElementId}, type: {ElementType}", element.Id, element.Type);
                 layers.Layer()
                     .TranslateX((float)element.XMm, Unit.Millimetre)
                     .TranslateY((float)element.YMm, Unit.Millimetre)
@@ -344,6 +360,7 @@ internal class BuilderBasedDocument : IDocument
 
     private void RenderElement(IContainer container, LayoutBuilderElement element, Produto produto)
     {
+        _logger.LogInformation("[PrintService] RenderElement called: element.Type={ElementType}, element.Id={ElementId}", element.Type, element.Id);
         if (element.Type == "qrcode")
         {
             var value = GetElementText(element, produto);
@@ -361,34 +378,35 @@ internal class BuilderBasedDocument : IDocument
 
         if (element.Type == "barcode")
         {
+            _logger.LogInformation("[PrintService] Rendering barcode element: {ElementId}", element.Id);
             var value = GetElementText(element, produto);
             if (string.IsNullOrWhiteSpace(value))
             {
-                Console.WriteLine($"[PrintService] Barcode value vazio para {element.FieldName}");
+                _logger.LogWarning("[PrintService] Barcode value empty for {FieldName}", element.FieldName);
                 return;
             }
 
             var barcodeType = element.BarcodeType ?? "ean13";
-            Console.WriteLine($"[PrintService] Gerando barcode: tipo={barcodeType}, valor={value}");
+            _logger.LogInformation("[PrintService] Generating barcode: type={BarcodeType}, value={Value}", barcodeType, value);
 
             try
             {
                 var imagePath = _barcodeService.GenerateBarcode(value, barcodeType);
-                Console.WriteLine($"[PrintService] Barcode gerado: {imagePath}");
+                _logger.LogInformation("[PrintService] Barcode generated: {ImagePath}", imagePath);
 
                 if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
                 {
-                    Console.WriteLine($"[PrintService] Renderizando barcode: {imagePath}");
+                    _logger.LogInformation("[PrintService] Rendering barcode image: {ImagePath}", imagePath);
                     container.Image(imagePath).FitArea();
                 }
                 else
                 {
-                    Console.WriteLine($"[PrintService] Arquivo barcode não existe ou caminho vazio: {imagePath}");
+                    _logger.LogWarning("[PrintService] Barcode file not found or path empty: {ImagePath}", imagePath);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[PrintService] Erro ao gerar barcode: {ex.Message}");
+                _logger.LogError(ex, "[PrintService] Error generating barcode: {Message}", ex.Message);
             }
 
             return;
