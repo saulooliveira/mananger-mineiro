@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 2026-05-17
+
+- autor: Claude Code
+- arquivo: app/backend/Data/JsonSerializerContext.cs
+- ação: correção
+- compilou: sim
+- testado: sim
+- observação: Corrigida ordem de atributos [JsonSerializable] para resolver source generation. LayoutBuilderElement, PageConfig, LayoutBuilderData devem ser declarados antes de seu uso em List e tipos dependentes.
+
 ## 2026-05-08 (Importação DBF Automática)
 
 - autor: Claude Code
